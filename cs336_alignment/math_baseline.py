@@ -67,7 +67,7 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
 
 if __name__ == '__main__':
     model_path = '/data/a5-alignment/models/Qwen2.5-Math-1.5B'
-    dataset_path = '/data/a5-alignment/MATH/validation.json'
+    dataset_path = '/data/a5-alignment/MATH/validation.jsonl'
     prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
     evals = evaluate_math(model_path, dataset_path, prompt_path, '/data/c-salzhu/qwen_2.5_math_1.5b_MATH_baseline.json')
 
