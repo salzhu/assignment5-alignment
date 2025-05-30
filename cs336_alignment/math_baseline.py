@@ -45,10 +45,6 @@ def evaluate_vllm(
     return evals 
 
 def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replacement="{{question}}"): 
-    llm = LLM(model=model_name)
-
-    with open(dataset, 'r') as file:
-       data = json.load(file)
 
     if is_prompt == False:
         with open(prompt, "r") as file:
@@ -56,12 +52,19 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
 
     prompts = []
     answers = []
-    for i in range(len(data)):
-        problem = data[i]["problem"]
-        prompts.append(problem.replace(replacement, problem))
-        answers.append(data[i]["answer"])
 
+    with open(dataset, 'r') as file:
+        for line in file:
+            data_dict = json.loads(line)
+            print(data_dict)
+        data = json.load(file)
+        problem = data["problem"]
+        prompts.append(problem.replace(replacement, problem))
+        answers.append(data["answer"])
+        
     print(prompts[:3])
+
+    llm = LLM(model=model_name)
 
     return evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, data, sampling_params, savepath)
 
