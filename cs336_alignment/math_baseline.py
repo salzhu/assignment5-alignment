@@ -30,7 +30,6 @@ def evaluate_vllm(
 
     evals = []
     for i in range(len(outputs)):
-        print(outputs[i].outputs[0].text, answers[i])
         rewards = reward_fn(outputs[i].outputs[0].text, answers[i])
         eval = {
             "prompt": prompts[i], 
@@ -63,10 +62,6 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
             prompts.append(prompt.replace(replacement, problem))
             answers.append(data["answer"])
             full_dataset.append(data)
-            if len(prompts) == 5:
-                break 
-        
-    print(prompts[:3])
 
     llm = LLM(model=model_name)
 
