@@ -44,7 +44,7 @@ def evaluate_vllm(
 
     return evals 
 
-def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replacement="\{question\}"): 
+def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replacement="{question}"): 
 
     if is_prompt == False:
         with open(prompt, "r") as file:
