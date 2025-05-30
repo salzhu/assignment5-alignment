@@ -58,7 +58,7 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
             data = json.loads(line)
             # data = json.load(file)
             problem = data["problem"]
-            prompts.append(problem.replace(replacement, problem))
+            prompts.append(prompt.replace(replacement, problem))
             answers.append(data["answer"])
         
     print(prompts[:3])
