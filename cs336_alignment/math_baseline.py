@@ -61,13 +61,15 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
         prompts.append(problem.replace(replacement, problem))
         answers.append(data[i]["answer"])
 
+    print(prompts[:3])
+
     return evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, data, sampling_params, savepath)
 
 if __name__ == '__main__':
     model_path = '/data/a5-alignment/models/Qwen2.5-Math-1.5B'
     dataset_path = '/data/a5-alignment/MATH/validation.json'
     prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
-    evals = evaluate_math(model_path, dataset_path, prompt_path)
+    evals = evaluate_math(model_path, dataset_path, prompt_path, '/data/c-salzhu/qwen_2.5_math_1.5b_MATH_baseline.json')
 
     format_answer = 0 
     format_noanswer = 0 
