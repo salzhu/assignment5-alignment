@@ -30,6 +30,7 @@ def evaluate_vllm(
 
     evals = []
     for i in range(len(outputs)):
+        print(outputs[i], answers[i])
         rewards = reward_fn(outputs[i], answers[i])
         eval = {
             "prompt": prompts[i], 
@@ -61,6 +62,8 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
             print(replacement, prompt)
             prompts.append(prompt.replace(replacement, problem))
             answers.append(data["answer"])
+            if len(prompts) == 5:
+                break 
         
     print(prompts[:3])
 
@@ -77,6 +80,7 @@ if __name__ == '__main__':
     format_answer = 0 
     format_noanswer = 0 
     noformat_noanswer = 0 
+    correct = 0 
 
     for eval in evals: 
         if eval['rewards']['format_reward'] == 1 and eval['rewards']['answer_reward'] == 1:
@@ -85,7 +89,10 @@ if __name__ == '__main__':
             format_noanswer += 1
         elif eval['rewards']['format_reward'] == 0 and eval['rewards']['answer_reward'] == 0:
             noformat_noanswer += 1
+        if eval['rewards']['answer_reward'] == 1:
+            correct += 1
     print(f'format1, answer1: {format_answer} | format1, answer0: {format_noanswer} | format0, answer0: {noformat_noanswer}')
+    print(f'correct: {correct} / {len(evals)}')
 
     print('******************************************************************')
     count = 0 
