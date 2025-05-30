@@ -18,7 +18,7 @@ def evaluate_vllm(
         reward_fn, 
         prompts, 
         answers,
-        full_problems,
+        full_dataset,
         eval_sampling_params, 
         savepath="rewards.json"
     ) -> None:
@@ -36,7 +36,7 @@ def evaluate_vllm(
             "prompt": prompts[i], 
             "response": outputs[i].outputs[0].text, 
             "rewards": rewards, 
-            "full": full_problems[i]
+            "full": full_dataset[i]
         }
         evals.append(eval)
         
@@ -53,6 +53,7 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
 
     prompts = []
     answers = []
+    full_dataset = []
 
     with open(dataset, 'r') as file:
         for line in file:
@@ -61,6 +62,7 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
             problem = data["problem"]
             prompts.append(prompt.replace(replacement, problem))
             answers.append(data["answer"])
+            full_dataset.append(data)
             if len(prompts) == 5:
                 break 
         
@@ -68,7 +70,7 @@ def evaluate_math(model_name, dataset, prompt, savepath, is_prompt=False, replac
 
     llm = LLM(model=model_name)
 
-    return evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, data, sampling_params, savepath)
+    return evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, full_dataset, sampling_params, savepath)
 
 if __name__ == '__main__':
     model_path = '/data/a5-alignment/models/Qwen2.5-Math-1.5B'
