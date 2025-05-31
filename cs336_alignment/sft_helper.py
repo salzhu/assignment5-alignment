@@ -20,3 +20,8 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
     masks = torch.tensor([[False] * (len(prompt) - 1) + [True] * len(output) + [False] * (max_length - len(prompt) - len(output)) for prompt, output in zip(tokenized_prompts, tokenized_outputs)])
 
     return {'input_ids': input_ids, 'labels': labels, 'response_mask': masks}
+
+def compute_entropy(logits: torch.Tensor) -> torch.Tensor:
+    logitnorm = torch.logsumexp(logits, dim=-1) # over the vocab 
+    logprobs = logits - logitnorm # normalize the log 
+    return -1 * logprobs * torch.exp(logprobs)
