@@ -6,8 +6,12 @@ tokenize_prompt_and_output:
 - constructs a mask that is 1 for the response tokens and 0 for other tokens (prompt or padding)
 """
 def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
-    texts = [prompt + output for prompt, output in zip(prompt_strs, output_strs)]
-    tokenized_texts = tokenizer(texts)['input_ids']
+
+    tokenized_prompts = tokenizer(prompt_strs)['input_ids']
+    tokenized_outputs = tokenizer(output_strs)['input_ids']
+
+    # texts = [prompt + output for prompt, output in zip(prompt_strs, output_strs)]
+    tokenized_texts = [prompt + output for prompt, output in zip(tokenized_prompts, tokenized_outputs)]
 
     max_length = max([len(text) for text in tokenized_texts])
     print(max_length, tokenized_texts)
@@ -19,6 +23,6 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
 
     input_ids = padded_texts[:][:-1]
     labels = padded_texts[:][1:]
-    masks = torch.tensor([[0] * len(prompt) + [1] * len(output) + [0] * (max_length - len(prompt) - len(output)) for prompt, output in zip(prompt_strs, output_strs)])
+    masks = torch.tensor([[0] * len(prompt) + [1] * len(output) + [0] * (max_length - len(prompt) - len(output)) for prompt, output in zip(tokenized_prompts, tokenized_outputs)])
 
     return {'input_ids': input_ids, 'labels': labels, 'response_mask': masks}
