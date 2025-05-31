@@ -17,8 +17,8 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
     print(torch.tensor(padded_texts))
     print(torch.tensor(padded_texts).shape)
 
-    input_ids = padded_texts[:,:-1]
-    labels = padded_texts[:,1:]
+    input_ids = padded_texts[:][:-1]
+    labels = padded_texts[:][1:]
     masks = torch.tensor([[0] * len(prompt) + [1] * len(output) + [0] * (max_length - len(prompt) - len(output)) for prompt, output in zip(prompt_strs, output_strs)])
 
     return {'input_ids': input_ids, 'labels': labels, 'response_mask': masks}
