@@ -1,7 +1,7 @@
 import torch 
 
 """
-tokenize_prompt_and_output: 
+4.2 tokenize_prompt_and_output: 
 - tokenizes the prompt and output strings
 - constructs a mask that is 1 for the response tokens and 0 for other tokens (prompt or padding)
 """
@@ -21,25 +21,43 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
 
     return {'input_ids': input_ids, 'labels': labels, 'response_mask': masks}
 
+"""
+4.2 compute_entropy
+- computes the per-token entropy of next-token predictions
+"""
 def compute_entropy(logits: torch.Tensor) -> torch.Tensor:
     logitnorm = torch.logsumexp(logits, dim=-1) # over the vocab 
     # print(logits.shape, logitnorm.shape)
     logprobs = logits - torch.unsqueeze(logitnorm,dim=-1) # normalize the log 
     return torch.sum(-1 * logprobs * torch.exp(logprobs), dim=-1)
 
+"""
+4.2 get_response_log_probs: 
+- gets per-token conditional log-probabilities (given the previous tokens) from a causal language model
+- optionally the entropy of the model’s next-token distribution
+"""
 def get_response_log_probs(
     model,
     input_ids: torch.Tensor,
     labels: torch.Tensor,
     return_token_entropy: bool = False,
 ) -> dict[str, torch.Tensor]:
+    
     logits = model(input_ids).logits # batch size x seq len x vocab size
     logprobs = torch.log(torch.nn.functional.softmax(logits, dim=-1)) #, dim=
-    print(logprobs.shape)
     logprobs = torch.gather(logprobs, -1, torch.unsqueeze(labels, dim=-1))
-    print(logprobs.shape)
     logprobs = torch.squeeze(logprobs)
 
     if not return_token_entropy:
         return {'log_probs': logprobs}
     return {'log_probs': logprobs, 'token_entropy': compute_entropy(logits)}
+
+def masked_normalize(
+    tensor: torch.Tensor,
+    mask: torch.Tensor,
+    normalize_constant: float,
+    dim: int | None = None,
+) -> torch.Tensor:
+    tensor = tensor * mask 
+    sum_tensor = torch.sum(tensor, dim=dim)
+    return sum_tensor / normalize_constant
