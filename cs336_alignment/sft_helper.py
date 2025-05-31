@@ -36,8 +36,9 @@ def get_response_log_probs(
     logits = model(input_ids).logits # batch size x seq len x vocab size
     logprobs = torch.log(torch.nn.functional.softmax(logits, dim=-1)) #, dim=
     print(logprobs.shape)
-    logprobs = torch.gather(logprobs, -1, labels)
+    logprobs = torch.gather(logprobs, -1, torch.unsqueeze(labels, dim=-1))
     print(logprobs.shape)
+    logprobs = torch.squeeze(logprobs)
 
     if not return_token_entropy:
         return {'log_probs': logprobs}
