@@ -7,17 +7,17 @@ tokenize_prompt_and_output:
 """
 def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
     texts = [prompt + output for prompt, output in zip(prompt_strs, output_strs)]
-    tokenized_texts = tokenizer(texts)
+    tokenized_texts = tokenizer(texts)['input_ids']
 
     max_length = max([len(text) for text in tokenized_texts])
     print(max_length, tokenized_texts)
     padded_texts = [text + [tokenizer.pad_token] * (max_length - len(text)) for text in tokenized_texts]
 
-    print(torch.tensor(padded_texts['input_ids']))
-    print(torch.tensor(padded_texts['input_ids']).shape)
+    print(torch.tensor(padded_texts))
+    print(torch.tensor(padded_texts).shape)
 
-    input_ids = tokenized_texts['input_ids'][:,:-1]
-    labels = tokenized_texts['input_ids'][:,1:]
-    masks = torch.tensor([[0] * len(prompt) + [1] * len(output) for prompt, output in zip(prompt_strs, output_strs)])
+    input_ids = padded_texts[:,:-1]
+    labels = padded_texts[:,1:]
+    masks = torch.tensor([[0] * len(prompt) + [1] * len(output) + [0] * (max_length - len(prompt) - len(output)) for prompt, output in zip(prompt_strs, output_strs)])
 
     return {'input_ids': input_ids, 'labels': labels, 'response_mask': masks}
