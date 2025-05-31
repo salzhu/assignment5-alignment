@@ -9,8 +9,8 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
     texts = [prompt + output for prompt, output in zip(prompt_strs, output_strs)]
     tokenized_texts = tokenizer(texts)
 
-    print(input_ids)
-    print(input_ids.shape)
+    print(tokenized_texts['input_ids'])
+    print(tokenized_texts['input_ids'].shape)
 
     input_ids = tokenized_texts['input_ids'][:,:-1]
     labels = tokenized_texts['input_ids'][:,1:]
