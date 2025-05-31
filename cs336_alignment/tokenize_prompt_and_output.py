@@ -10,6 +10,7 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
     tokenized_texts = tokenizer(texts)
 
     max_length = max([len(text) for text in tokenized_texts])
+    print(max_length, tokenized_texts)
     padded_texts = [text + [tokenizer.pad_token] * (max_length - len(text)) for text in tokenized_texts]
 
     print(torch.tensor(padded_texts['input_ids']))
