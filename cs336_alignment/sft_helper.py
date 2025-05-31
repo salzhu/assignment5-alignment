@@ -24,4 +24,4 @@ def tokenize_prompt_and_output(prompt_strs, output_strs, tokenizer):
 def compute_entropy(logits: torch.Tensor) -> torch.Tensor:
     logitnorm = torch.logsumexp(logits, dim=-1) # over the vocab 
     logprobs = logits - logitnorm # normalize the log 
-    return -1 * logprobs * torch.exp(logprobs)
+    return torch.sum(-1 * logprobs * torch.exp(logprobs), dim=-1)
