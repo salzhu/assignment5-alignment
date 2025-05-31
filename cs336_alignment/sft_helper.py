@@ -59,5 +59,13 @@ def masked_normalize(
     dim: int | None = None,
 ) -> torch.Tensor:
     tensor = tensor * mask 
-    sum_tensor = torch.sum(tensor, dim=dim)
+    print(dim)
+
+    if dim is int: 
+        sum_tensor = torch.sum(tensor, dim=int(dim))
+    elif dim is None: 
+        sum_tensor = torch.sum(tensor, dim=None)
+
+    
+    sum_tensor = torch.sum(tensor, dim=int(dim))
     return sum_tensor / normalize_constant
