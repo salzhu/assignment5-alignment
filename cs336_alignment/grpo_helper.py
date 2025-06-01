@@ -36,8 +36,7 @@ def compute_group_normalized_rewards(
         for j in range(group_size):
             index = i * group_size + j 
             if normalize_by_std:
-                advantages.append(group_rewards[j] - mean_reward)
-                # advantages.append((group_rewards[j] - mean_reward) / (std_reward + advantage_eps))
+                advantages.append((group_rewards[j] - mean_reward) / (std_reward + 0))
             else:
                 advantages.append(group_rewards[j] - mean_reward)
     return advantages, rewards, {'means': means, 'stds': stds, 'maxs': maxs, 'mins': mins}
