@@ -44,8 +44,22 @@ def compute_group_normalized_rewards(
                 advantages.append(group_rewards[j] - mean_reward)
     return advantages, rewards, {'means': means, 'stds': stds, 'maxs': maxs, 'mins': mins}
 
+"""
+7.2 GRPO compute_naive_policy_gradient_loss
+- computes the per-token policy-gradient loss using raw rewards or pre-computed advantages
+"""
 def compute_naive_policy_gradient_loss(
         raw_rewards_or_advantages: torch.Tensor,
         policy_log_probs: torch.Tensor,
         ) -> torch.Tensor:
     return -1 * raw_rewards_or_advantages * policy_log_probs
+
+def compute_grpo_clip_loss(
+        advantages: torch.Tensor,
+        policy_log_probs: torch.Tensor,
+        old_log_probs: torch.Tensor,
+        cliprange: float,
+        ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    policy_ratio = policy_log_probs / old_log_probs
+    clipped_policy_ratio = max(1 - cliprange, min(1 + cliprange, policy_ratio))
+    return -1 * min(advantages * policy_ratio, advantages * clipped_policy_ratio)
