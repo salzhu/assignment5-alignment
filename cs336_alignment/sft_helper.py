@@ -82,4 +82,4 @@ def sft_microbatch_train_step(
     loss = torch.mean(logprobs)  / gradient_accumulation_steps
     loss.backward() 
 
-    return loss 
+    return loss, loss
