@@ -1,6 +1,6 @@
 import json 
 from vllm import LLM, SamplingParams
-from drgrpo_grader import r1_zero_reward_fn
+from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
 
 sampling_params = SamplingParams(
     temperature=1.0, top_p=1.0, max_tokens=1024, stop=["\n"]
