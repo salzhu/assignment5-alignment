@@ -10,6 +10,17 @@ All changes we make to the assignment code or PDF will be documented in this fil
 
 ### Fixed
 
+## [1.0.1] - 2025-05-31
+
+### Added
+- code: for optional assignment, update alpaca_eval to Llama 3.3 70B Instruct judge
+- handout: add optional assignment on safety, instruction tuning, and RLHF
+
+### Changed
+
+### Fixed
+- code: change masked normalize constant to not equal seqlen, more SFT test coverage
+
 ## [1.0.0] - 2025-05-23
 
 ### Added
