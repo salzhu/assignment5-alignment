@@ -21,12 +21,11 @@ def compute_group_normalized_rewards(
         for j in range(group_size):
             index = i * group_size + j 
             reward_dict = reward_fn(rollout_responses[index], repeated_ground_truths[index])
-            print(reward_dict)
             reward = reward_dict['reward']
             group_rewards.append(reward) 
         rewards += group_rewards
-        mean_reward = np.mean(group_rewards)
-        std_reward = np.std(group_rewards)
+        mean_reward = torch.mean(torch.tensor(group_rewards))
+        std_reward = torch.std(torch.tensor(group_rewards))
         means.append(mean_reward)
         stds.append(std_reward)
         maxs.append(np.max(group_rewards))
@@ -36,7 +35,7 @@ def compute_group_normalized_rewards(
         for j in range(group_size):
             index = i * group_size + j 
             if normalize_by_std:
-                advantages.append((group_rewards[j] - mean_reward) / (std_reward + 0))
+                advantages.append((group_rewards[j] - mean_reward) / (std_reward + advantage_eps))
             else:
                 advantages.append(group_rewards[j] - mean_reward)
     return advantages, rewards, {'means': means, 'stds': stds, 'maxs': maxs, 'mins': mins}
