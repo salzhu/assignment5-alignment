@@ -3,7 +3,7 @@ import json
 from vllm import LLM, SamplingParams
 import numpy as np 
 
-from math_baseline import evaluate_vllm
+from cs336_alignment.math_baseline import evaluate_vllm
 
 """
 4.2 tokenize_prompt_and_output: 
