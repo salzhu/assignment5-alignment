@@ -1,4 +1,9 @@
 import torch 
+import json 
+from vllm import LLM, SamplingParams
+import numpy as np 
+
+from math_baseline import evaluate_vllm
 
 """
 4.2 tokenize_prompt_and_output: 
@@ -68,19 +73,71 @@ def masked_normalize(
     sum_tensor = torch.sum(tensor, dim=dim)
     return sum_tensor / normalize_constant
 
+"""
+4.2 sft_microbatch_train_step
+- implements a single micro-batch update for SFT,
+- including cross-entropy loss, summing with a mask, and gradient scaling
+"""
 def sft_microbatch_train_step(
     policy_log_probs: torch.Tensor,
     response_mask: torch.Tensor,
     gradient_accumulation_steps: int,
     normalize_constant: float = 1.0,
 ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-    
-    # loss = torch.nn.functional.cross_entropy(policy_log_probs)
-    
+        
     logprobs = masked_normalize(policy_log_probs, response_mask, normalize_constant, dim=-1)
-    # loss = compute_entropy(logprobs) / gradient_accumulation_steps
-    print(logprobs.shape)
     loss = -1 * torch.mean(logprobs) / gradient_accumulation_steps
     loss.backward() 
 
     return loss, {"loss": loss, "policy_log_probs_grad": policy_log_probs.grad}
+
+def log_generations(model, tokenizer, prompt_path, val_path, reward_fn, n_prompts=16, replacement="{question}"): 
+
+    prompts = []
+    answers = []
+    full_dataset = []
+
+    with open(prompt_path, "r") as file:
+        prompt = file.read()
+
+    with open(val_path, 'r') as file:
+        for line in file:
+            data = json.loads(line)
+            problem = data["problem"]
+            prompts.append(prompt.replace(replacement, problem))
+            answers.append(data["answer"])
+            full_dataset.append(data)
+
+    llm = LLM(model=model)
+    sampling_params = SamplingParams(
+        temperature=1.0, top_p=1.0, max_tokens=1024, stop=["\n"]
+    )
+
+    evals = evaluate_vllm(llm, reward_fn, prompts, answers, full_dataset, sampling_params, 'temp.json')
+
+    response_lengths = []
+    response_lengths_correct = []
+    response_lengths_incorrect = []
+
+    for i in range(len(evals)):
+        tokenized = tokenize_prompt_and_output(evals[i]['prompt'], evals[i]['response'], tokenizer)
+        evals[i]['answer'] = evals[i]['full']['answer']
+        input_ids = tokenized['input_ids']
+        labels = tokenized['labels']
+        logprobs_dict = get_response_log_probs(model, input_ids, labels, return_token_entropy=True)
+        evals[i]['token_entropy'] = torch.mean(logprobs_dict['token_entropy'])
+        evals[i]['log_probs'] = logprobs_dict['log_probs']
+
+        length = len(tokenizer(evals[i]['response'])['input_ids']) 
+        response_lengths.append(length) 
+
+        if evals[i]['rewards']['answer_reward'] == 1: 
+            response_lengths_correct.append(length)
+        else:
+            response_lengths_incorrect.append(length)
+        
+        # evals[i]['response_length']
+
+    return evals, {'response_length': np.mean(response_lengths), 
+                   'response_length_correct': np.mean(response_lengths_correct), 
+                   'response_length_incorrect': np.mean(response_lengths_incorrect)}

@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerBase
 
 from cs336_alignment.sft_helper import tokenize_prompt_and_output, compute_entropy, get_response_log_probs, masked_normalize, sft_microbatch_train_step
+from cs336_alignment.grpo_helper import compute_group_normalized_rewards
 
 def run_tokenize_prompt_and_output(
     prompt_strs: list[str],
@@ -79,6 +80,8 @@ def run_compute_group_normalized_rewards(
                 You may choose what you wish to log here
                 (some statistics of the rewards, etc.).
     """
+    return compute_group_normalized_rewards(reward_fn, rollout_responses, repeated_ground_truths, group_size, 
+                                            advantage_eps, normalize_by_std)
     raise NotImplementedError
 
 
