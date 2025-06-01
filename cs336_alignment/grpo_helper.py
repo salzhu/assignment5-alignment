@@ -72,4 +72,5 @@ def compute_grpo_clip_loss(
     loss = -1 * torch.minimum(advantages * policy_ratio, advantages * clipped_policy_ratio)
     print(loss.shape)
     clipped = advantages * clipped_policy_ratio < advantages * policy_ratio
+    return 0 * loss, {}
     return loss, {'clipped': clipped}
