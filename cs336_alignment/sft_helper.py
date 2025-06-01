@@ -75,8 +75,11 @@ def sft_microbatch_train_step(
     normalize_constant: float = 1.0,
 ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     
+    loss = torch.nn.functional.cross_entropy(policy_log_probs)
+    
     logprobs = masked_normalize(policy_log_probs, response_mask, normalize_constant)
-    loss = compute_entropy(logprobs) / gradient_accumulation_steps
+    # loss = compute_entropy(logprobs) / gradient_accumulation_steps
+    loss = torch.mean(logprobs)  / gradient_accumulation_steps
     loss.backward() 
 
-    return {'loss': loss}
+    return loss 
