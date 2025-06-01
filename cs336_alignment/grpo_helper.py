@@ -25,7 +25,7 @@ def compute_group_normalized_rewards(
             group_rewards.append(reward) 
         rewards += group_rewards
         mean_reward = np.mean(group_rewards)
-        std_reward = np.std(group_rewards)
+        std_reward = np.std(rewards)
         means.append(mean_reward)
         stds.append(std_reward)
         maxs.append(np.max(group_rewards))
