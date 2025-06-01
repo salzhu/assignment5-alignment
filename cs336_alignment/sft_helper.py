@@ -52,20 +52,31 @@ def get_response_log_probs(
         return {'log_probs': logprobs}
     return {'log_probs': logprobs, 'token_entropy': compute_entropy(logits)}
 
+"""
+4.2 masked_normalize
+- sums over tensor elements and
+- normalizes by a constant while respecting a boolean mask
+"""
 def masked_normalize(
     tensor: torch.Tensor,
     mask: torch.Tensor,
     normalize_constant: float,
     dim: int | None = None,
 ) -> torch.Tensor:
-    tensor = tensor * mask 
-    print(dim)
-
-    # if dim is int: 
-    #     sum_tensor = torch.sum(tensor, dim=int(dim))
-    # elif dim is None: 
-    #     sum_tensor = torch.sum(tensor, dim=None)
-
     
+    tensor = tensor * mask 
     sum_tensor = torch.sum(tensor, dim=dim)
     return sum_tensor / normalize_constant
+
+def sft_microbatch_train_step(
+    policy_log_probs: torch.Tensor,
+    response_mask: torch.Tensor,
+    gradient_accumulation_steps: int,
+    normalize_constant: float = 1.0,
+) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    
+    logprobs = masked_normalize(policy_log_probs, response_mask, normalize_constant)
+    loss = compute_entropy(logprobs) / gradient_accumulation_steps
+    loss.backward() 
+
+    return {'loss': loss}
