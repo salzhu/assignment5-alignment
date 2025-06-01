@@ -7,7 +7,7 @@ def compute_group_normalized_rewards(
     repeated_ground_truths,
     group_size,
     advantage_eps,
-    normalize_by_std=True,
+    normalize_by_std,
 ):
     
     advantages = []
@@ -30,6 +30,7 @@ def compute_group_normalized_rewards(
         stds.append(std_reward)
         maxs.append(np.max(group_rewards))
         mins.append(np.min(group_rewards))
+        print(std_reward)
         for j in range(group_size):
             index = i * group_size + j 
             if normalize_by_std:
