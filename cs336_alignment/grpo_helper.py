@@ -61,5 +61,5 @@ def compute_grpo_clip_loss(
         cliprange: float,
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     policy_ratio = policy_log_probs / old_log_probs
-    clipped_policy_ratio = max(1 - cliprange, min(1 + cliprange, policy_ratio))
+    clipped_policy_ratio = torch.clamp(policy_ratio, min=1 - cliprange, max=1 + cliprange)
     return -1 * min(advantages * policy_ratio, advantages * clipped_policy_ratio)
