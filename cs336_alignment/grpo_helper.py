@@ -7,7 +7,7 @@ def compute_group_normalized_rewards(
     repeated_ground_truths,
     group_size,
     advantage_eps,
-    normalize_by_std,
+    normalize_by_std=True,
 ):
     
     advantages = []
