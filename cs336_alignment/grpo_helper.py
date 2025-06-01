@@ -31,6 +31,7 @@ def compute_group_normalized_rewards(
         maxs.append(np.max(group_rewards))
         mins.append(np.min(group_rewards))
         print(std_reward)
+        print(repeated_ground_truths)
         for j in range(group_size):
             index = i * group_size + j 
             if normalize_by_std:
