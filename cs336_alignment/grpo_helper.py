@@ -1,6 +1,12 @@
 import torch 
 import numpy as np 
 
+"""
+7.2 GRPO compute_group_normalized_rewards
+- calculates raw rewards for each rollout response, 
+- normalizes them within their groups, 
+- and returns both the normalized and raw rewards along with metadata
+"""
 def compute_group_normalized_rewards(
     reward_fn,
     rollout_responses,
@@ -30,8 +36,6 @@ def compute_group_normalized_rewards(
         stds.append(std_reward)
         maxs.append(np.max(group_rewards))
         mins.append(np.min(group_rewards))
-        print(std_reward)
-        print(repeated_ground_truths)
         for j in range(group_size):
             index = i * group_size + j 
             if normalize_by_std:
@@ -39,3 +43,9 @@ def compute_group_normalized_rewards(
             else:
                 advantages.append(group_rewards[j] - mean_reward)
     return advantages, rewards, {'means': means, 'stds': stds, 'maxs': maxs, 'mins': mins}
+
+def compute_naive_policy_gradient_loss(
+        raw_rewards_or_advantages: torch.Tensor,
+        policy_log_probs: torch.Tensor,
+        ) -> torch.Tensor:
+    return -1 * raw_rewards_or_advantages * policy_log_probs
