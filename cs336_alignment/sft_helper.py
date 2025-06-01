@@ -79,6 +79,7 @@ def sft_microbatch_train_step(
     
     logprobs = masked_normalize(policy_log_probs, response_mask, normalize_constant)
     # loss = compute_entropy(logprobs) / gradient_accumulation_steps
+    print(logprobs.shape)
     loss = -1 * torch.mean(logprobs) # / gradient_accumulation_steps
     loss.backward() 
 
