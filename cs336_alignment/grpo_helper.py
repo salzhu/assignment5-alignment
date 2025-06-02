@@ -73,6 +73,12 @@ def compute_grpo_clip_loss(
     clipped = advantages * clipped_policy_ratio < advantages * policy_ratio
     return loss, {'clipped': clipped}
 
+"""
+7.2 GRPO compute_policy_gradient_loss
+- convenience wrapper that dispatches to the correct loss routine 
+    - (no_baseline, reinforce_with_baseline, or grpo_clip)
+- returns both the per-token loss and any auxiliary statistics
+"""
 def compute_policy_gradient_loss(
         policy_log_probs: torch.Tensor,
         loss_type: Literal["no_baseline", "reinforce_with_baseline", "grpo_clip"],
@@ -91,3 +97,12 @@ def compute_policy_gradient_loss(
         loss, metadata = compute_grpo_clip_loss(advantages, policy_log_probs, old_log_probs, cliprange)
         metadata['loss'] = loss
         return loss, metadata
+
+def masked_mean(
+        tensor: torch.Tensor,
+        mask: torch.Tensor,
+        dim: int | None = None,
+        ) -> torch.Tensor:
+    tensor = tensor * mask 
+    mean_tensor = torch.mean(tensor, dim=dim)
+    return mean_tensor 
