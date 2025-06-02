@@ -1,5 +1,6 @@
 import torch 
 import numpy as np 
+from typing import Literal
 
 """
 7.2 GRPO compute_group_normalized_rewards
@@ -54,16 +55,39 @@ def compute_naive_policy_gradient_loss(
         ) -> torch.Tensor:
     return -1 * raw_rewards_or_advantages * policy_log_probs
 
+"""
+7.2 GRPO compute_grpo_clip_loss
+- computes the per-token GRPO-Clip loss
+"""
 def compute_grpo_clip_loss(
         advantages: torch.Tensor,
         policy_log_probs: torch.Tensor,
         old_log_probs: torch.Tensor,
         cliprange: float,
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    
     policy_ratio = torch.div(torch.exp(policy_log_probs), torch.exp(old_log_probs))
     clipped_policy_ratio = torch.clamp(policy_ratio, min=1-cliprange, max=1+cliprange)
 
     loss = -1 * torch.minimum(advantages * policy_ratio, advantages * clipped_policy_ratio)
     clipped = advantages * clipped_policy_ratio < advantages * policy_ratio
-    print(clipped)
     return loss, {'clipped': clipped}
+
+def compute_policy_gradient_loss(
+        policy_log_probs: torch.Tensor,
+        loss_type: Literal["no_baseline", "reinforce_with_baseline", "grpo_clip"],
+        raw_rewards: torch.Tensor | None = None,
+        advantages: torch.Tensor | None = None,
+        old_log_probs: torch.Tensor | None = None,
+        cliprange: float | None = None,
+        ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+    if loss_type == 'no_baseline': 
+        loss = compute_naive_policy_gradient_loss(raw_rewards, policy_log_probs)
+        return loss, {'loss': loss}
+    if loss_type == 'reinforce_with_baseline': 
+        loss = compute_naive_policy_gradient_loss(advantages, policy_log_probs)
+        return loss, {'loss': loss}
+    if loss_type == 'grpo_clip':
+        loss, metadata = compute_grpo_clip_loss(advantages, policy_log_probs, old_log_probs, cliprange)
+        metadata['loss'] = loss
+        return loss, metadata
