@@ -104,5 +104,5 @@ def masked_mean(
         dim: int | None = None,
         ) -> torch.Tensor:
     tensor = tensor * mask 
-    mean_tensor = torch.mean(tensor, dim=dim)
+    mean_tensor = torch.sum(tensor, dim=dim) / torch.sum(mask, dim=dim)
     return mean_tensor 
