@@ -123,6 +123,7 @@ def grpo_microbatch_train_step(
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     loss = compute_policy_gradient_loss(policy_log_probs, loss_type, raw_rewards, advantages, 
                                         old_log_probs, cliprange)
+    print(loss.shape, response_mask.shape)
     masked_mean_loss = masked_mean(loss, response_mask) / gradient_accumulation_steps
     masked_mean_loss.backward()
     return masked_mean_loss, {"loss": masked_mean_loss, "policy_log_probs_grad": policy_log_probs.grad}
