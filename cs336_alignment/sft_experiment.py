@@ -20,7 +20,7 @@ sampling_params = SamplingParams(
     temperature=1.0, top_p=1.0, max_tokens=1024, stop=['</answer>']
 )
 
-def init_vllm(model_id: str, device: str, seed: int, gpu_memory_utilization: float = 0.85):
+def init_vllm(model_id: str, device: str, seed: int, gpu_memory_utilization: float = 0.2):
     """
     Start the inference process, here we use vLLM to hold a model on
     a GPU separate from the policy.
@@ -96,7 +96,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
     eval_answers_small = eval_answers[:n_eval]
     eval_full_dataset_small = eval_full_dataset[:n_eval]
 
-    llm = init_vllm(model_name, 'cuda:1', 0)
+    llm = init_vllm(model_name, 'cuda:0', 0)
     load_policy_into_vllm_instance(model, llm)
 
     wandb.init(
