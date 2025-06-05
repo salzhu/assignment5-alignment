@@ -17,8 +17,10 @@ val_path = '/data/a5-alignment/MATH/validation.jsonl'
 replacement = "{question}"
 
 sampling_params = SamplingParams(
-    temperature=1.0, top_p=1.0, max_tokens=1024, stop=['</answer>']
+    temperature=1.0, top_p=1.0, max_tokens=1024
 )
+sampling_params.stop = ["</answer>"]
+sampling_params.include_stop_str_in_output = True
 
 def init_vllm(model_id: str, device: str, seed: int, gpu_memory_utilization: float = 0.2):
     """
@@ -60,7 +62,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
     
     model = AutoModelForCausalLM.from_pretrained(model_name,
                                                  torch_dtype=torch.bfloat16,
-                                                 attn_implementation="flash_attention_2",).to('cuda:0')
+                                                 attn_implementation="flash_attention_2",).to('cuda')
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     prompts = []
@@ -96,7 +98,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
     eval_answers_small = eval_answers[:n_eval]
     eval_full_dataset_small = eval_full_dataset[:n_eval]
 
-    llm = init_vllm(model_name, 'cuda:0', 0)
+    llm = init_vllm(model_name, 'cuda', 0)
     load_policy_into_vllm_instance(model, llm)
 
     wandb.init(
@@ -121,9 +123,9 @@ def train_sft(model_name, train_path, n_examples, n_eval,
 
     end = 0
     for idx, (input, labels, mask) in enumerate(dataloader):
-        input = input.to('cuda:0')
-        labels = labels.to('cuda:0')
-        mask = mask.to('cuda:0')
+        input = input.to('cuda')
+        labels = labels.to('cuda')
+        mask = mask.to('cuda')
         policy_log_probs = get_response_log_probs(model, input, labels, False)['log_probs']
         loss, metadata = sft_microbatch_train_step(policy_log_probs, mask, grad_accum_steps, normalize_constant=1.0)
 
@@ -145,7 +147,6 @@ def train_sft(model_name, train_path, n_examples, n_eval,
             load_policy_into_vllm_instance(model, llm)
             evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, eval_full_dataset_small, 
                                   sampling_params, 'temp.json')
-
             correct = 0
             for i in range(len(evals)):
                 if evals[i]['rewards']['answer_reward'] == 1: 
