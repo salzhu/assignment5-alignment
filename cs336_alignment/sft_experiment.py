@@ -57,6 +57,11 @@ def load_policy_into_vllm_instance(policy: PreTrainedModel, llm: LLM):
 
 def train_sft(model_name, train_path, n_examples, 
               grad_accum_steps, learning_rate, batch_size, eval_steps, filter_correct=False):
+    
+    model = AutoModelForCausalLM.from_pretrained(model_name,
+                                                 torch_dtype=torch.bfloat16,
+                                                 attn_implementation="flash_attention_2",).to('cuda:0')
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
 
     prompts = []
     outputs = []
@@ -88,10 +93,7 @@ def train_sft(model_name, train_path, n_examples,
             answers.append(data["answer"])
             full_dataset.append(data)
 
-    model = AutoModelForCausalLM.from_pretrained(model_name,
-                                                 torch_dtype=torch.bfloat16,
-                                                 attn_implementation="flash_attention_2",).to('cuda:0')
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    
 
     llm = init_vllm(model_name, 'cuda:1', 0)
     load_policy_into_vllm_instance(model, llm)
@@ -157,6 +159,6 @@ if __name__ == '__main__':
     parser.add_argument('--eval_steps', type=int, default=8)
 
     args = parser.parse_args()
-    
+
     train_sft(args.model_name, args.train_path, args.n_examples, 
               args.grad_accum_steps, args.learning_rate, args.batch_size, args.eval_steps, False)
