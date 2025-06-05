@@ -96,7 +96,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
             eval_prompts.append(prompt.replace(replacement, problem))
             eval_answers.append(data["answer"])
             eval_full_dataset.append(data)
-    indices = random.sample(np.arange(len(eval_prompts)), n_eval) 
+    indices = random.sample(range(len(eval_prompts)), n_eval) 
     eval_prompts_small = eval_prompts[indices]
     eval_answers_small = eval_answers[indices]
     eval_full_dataset_small = eval_full_dataset[indices]
