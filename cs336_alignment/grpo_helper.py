@@ -111,6 +111,11 @@ def masked_mean(
     mean_tensor = torch.sum(tensor, dim=dim) / torch.sum(mask, dim=dim)
     return mean_tensor 
 
+"""
+7.2 GRPO grpo_microbatch_train_step
+- implements a single micro-batch update for GRPO, including policy-gradient loss, 
+  averaging with a mask, and gradient scaling
+"""
 def grpo_microbatch_train_step(
         policy_log_probs: torch.Tensor,
         response_mask: torch.Tensor,
@@ -123,7 +128,6 @@ def grpo_microbatch_train_step(
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     loss, metadata = compute_policy_gradient_loss(policy_log_probs, loss_type, raw_rewards, advantages, 
                                         old_log_probs, cliprange)
-    print(loss.shape, response_mask.shape)
     masked_mean_loss = masked_mean(loss, response_mask) / gradient_accumulation_steps
     masked_mean_loss.backward()
     metadata['loss_masked'] = masked_mean_loss
