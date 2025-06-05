@@ -154,7 +154,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
 
             log = {'eval/accuracy': correct / len(evals),'eval_step': (idx + 1) // eval_steps}
             wandb.log(log)
-        end = idx
+            end = (idx + 1) // eval_steps
 
     load_policy_into_vllm_instance(model, llm)
     evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts, eval_answers, eval_full_dataset, sampling_params, 'temp.json')
@@ -164,7 +164,7 @@ def train_sft(model_name, train_path, n_examples, n_eval,
         if evals[i]['rewards']['answer_reward'] == 1: 
             correct += 1
 
-    log = {'eval/accuracy': correct / len(evals),'eval_step': (end + 1) // eval_steps}
+    log = {'eval/accuracy': correct / len(evals),'eval_step': end + 2}
     wandb.log(log)
 
 if __name__ == '__main__':
