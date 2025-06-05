@@ -93,8 +93,6 @@ def train_sft(model_name, train_path, n_examples,
             answers.append(data["answer"])
             full_dataset.append(data)
 
-    
-
     llm = init_vllm(model_name, 'cuda:1', 0)
     load_policy_into_vllm_instance(model, llm)
 
@@ -119,8 +117,10 @@ def train_sft(model_name, train_path, n_examples,
     )
 
     for idx, (input, labels, mask) in enumerate(dataloader):
-        logprob_dict = get_response_log_probs(model, input, labels, True)
-        policy_log_probs = logprob_dict['log_probs'] # also has 'token_entropy' 
+        input = input.to('cuda:0')
+        labels = labels.to('cuda:0')
+        mask = mask.to('cuda:0')
+        policy_log_probs = get_response_log_probs(model, input, labels, True)
         loss, metadata = sft_microbatch_train_step(policy_log_probs, mask, grad_accum_steps, normalize_constant=1.0)
 
         # wandb log the train loss 
@@ -155,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_examples', type=int, default=128)
     parser.add_argument('--grad_accum_steps', type=int, default=8)
     parser.add_argument('--learning_rate', type=float, default=0.01)
-    parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--eval_steps', type=int, default=8)
 
     args = parser.parse_args()
