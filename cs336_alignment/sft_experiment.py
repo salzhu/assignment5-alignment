@@ -1,5 +1,7 @@
 import torch 
 import wandb
+import random 
+import numpy as np
 import json 
 from vllm import LLM, SamplingParams
 from vllm.model_executor import set_random_seed as vllm_set_random_seed
@@ -94,9 +96,10 @@ def train_sft(model_name, train_path, n_examples, n_eval,
             eval_prompts.append(prompt.replace(replacement, problem))
             eval_answers.append(data["answer"])
             eval_full_dataset.append(data)
-    eval_prompts_small = eval_prompts[:n_eval]
-    eval_answers_small = eval_answers[:n_eval]
-    eval_full_dataset_small = eval_full_dataset[:n_eval]
+    indices = random.sample(np.arange(len(eval_prompts)), n_eval) 
+    eval_prompts_small = eval_prompts[indices]
+    eval_answers_small = eval_answers[indices]
+    eval_full_dataset_small = eval_full_dataset[indices]
 
     llm = init_vllm(model_name, 'cuda', 0)
     load_policy_into_vllm_instance(model, llm)
