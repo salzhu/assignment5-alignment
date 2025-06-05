@@ -120,7 +120,7 @@ def train_sft(model_name, train_path, n_examples,
         input = input.to('cuda:0')
         labels = labels.to('cuda:0')
         mask = mask.to('cuda:0')
-        policy_log_probs = get_response_log_probs(model, input, labels, False)
+        policy_log_probs = get_response_log_probs(model, input, labels, False)['log_probs']
         loss, metadata = sft_microbatch_train_step(policy_log_probs, mask, grad_accum_steps, normalize_constant=1.0)
 
         # wandb log the train loss 
