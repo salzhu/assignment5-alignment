@@ -96,10 +96,6 @@ def train_sft(model_name, train_path, n_examples, n_eval,
             eval_prompts.append(prompt.replace(replacement, problem))
             eval_answers.append(data["answer"])
             eval_full_dataset.append(data)
-    indices = random.sample(range(len(eval_prompts)), n_eval) 
-    eval_prompts_small = eval_prompts[indices]
-    eval_answers_small = eval_answers[indices]
-    eval_full_dataset_small = eval_full_dataset[indices]
 
     llm = init_vllm(model_name, 'cuda', 0)
     load_policy_into_vllm_instance(model, llm)
@@ -148,6 +144,10 @@ def train_sft(model_name, train_path, n_examples, n_eval,
 
         if (idx + 1) % eval_steps == 0: 
             load_policy_into_vllm_instance(model, llm)
+            indices = random.sample(range(len(eval_prompts)), n_eval) 
+            eval_prompts_small = [eval_prompts[i] for i in indices]
+            eval_answers_small = [eval_answers[i] for i in indices]
+            eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
             evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, eval_full_dataset_small, 
                                   sampling_params, 'temp.json')
             correct = 0
