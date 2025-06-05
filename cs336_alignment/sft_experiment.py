@@ -97,7 +97,7 @@ def train_sft(model_name, train_path, n_examples,
     load_policy_into_vllm_instance(model, llm)
 
     wandb.init(
-        project="a5",
+        project="a5-sft",
         name=f"sft_n{n_examples}_lr{learning_rate}_bs{batch_size}",  # Set your run name here
     )
 
