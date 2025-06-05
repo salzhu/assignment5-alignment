@@ -13,7 +13,7 @@ from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
 from cs336_alignment.math_baseline import evaluate_vllm
 
 prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
-val_path = '/data/a5-alignment/MATH/validation.json'
+val_path = '/data/a5-alignment/MATH/validation.jsonl'
 replacement = "{question}"
 
 sampling_params = SamplingParams(
