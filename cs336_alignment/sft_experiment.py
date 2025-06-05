@@ -138,6 +138,7 @@ def train_sft(model_name, train_path, n_examples,
             optimizer.zero_grad()
 
         if (idx + 1) % eval_steps == 0: 
+            load_policy_into_vllm_instance(model, llm)
             evals = evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, full_dataset, sampling_params, 'temp.json')
 
             correct = 0
@@ -154,7 +155,7 @@ if __name__ == '__main__':
     parser.add_argument('--train_path', type=str, default='/data/a5-alignment/MATH/sft.jsonl')
     parser.add_argument('--n_examples', type=int, default=128)
     parser.add_argument('--grad_accum_steps', type=int, default=8)
-    parser.add_argument('--learning_rate', type=float, default=0.01)
+    parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--eval_steps', type=int, default=8)
 
