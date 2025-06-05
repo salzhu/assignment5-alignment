@@ -12,7 +12,7 @@ from cs336_alignment.sft_helper import tokenize_prompt_and_output, get_response_
 from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
 from cs336_alignment.math_baseline import evaluate_vllm
 
-prompt_path = 'prompts/r1_zero.prompt'
+prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
 val_path = '/data/a5-alignment/MATH/validation.json'
 replacement = "{question}"
 
