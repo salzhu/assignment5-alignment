@@ -17,7 +17,7 @@ val_path = '/data/a5-alignment/MATH/validation.jsonl'
 replacement = "{question}"
 
 sampling_params = SamplingParams(
-    temperature=1.0, top_p=1.0, max_tokens=1024, stop=["\n"]
+    temperature=1.0, top_p=1.0, max_tokens=1024, stop=['</answer>']
 )
 
 def init_vllm(model_id: str, device: str, seed: int, gpu_memory_utilization: float = 0.85):
@@ -55,7 +55,7 @@ def load_policy_into_vllm_instance(policy: PreTrainedModel, llm: LLM):
     llm_model = llm.llm_engine.model_executor.driver_worker.model_runner.model
     llm_model.load_weights(state_dict.items())
 
-def train_sft(model_name, train_path, n_examples, 
+def train_sft(model_name, train_path, n_examples, n_eval,
               grad_accum_steps, learning_rate, batch_size, eval_steps, filter_correct=False):
     
     model = AutoModelForCausalLM.from_pretrained(model_name,
@@ -80,18 +80,21 @@ def train_sft(model_name, train_path, n_examples,
     dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor)
     dataloader = DataLoader(dataset, batch_size=batch_size//grad_accum_steps, shuffle=True)
 
-    prompts = []
-    answers = []
-    full_dataset = []
+    eval_prompts = []
+    eval_answers = []
+    eval_full_dataset = []
     with open(prompt_path, "r") as file:
         prompt = file.read()
     with open(val_path, 'r') as file:
         for line in file:
             data = json.loads(line)
             problem = data["problem"]
-            prompts.append(prompt.replace(replacement, problem))
-            answers.append(data["answer"])
-            full_dataset.append(data)
+            eval_prompts.append(prompt.replace(replacement, problem))
+            eval_answers.append(data["answer"])
+            eval_full_dataset.append(data)
+    eval_prompts = eval_prompts[:n_eval]
+    eval_answers = eval_answers[:n_eval]
+    eval_full_dataset = eval_full_dataset[:n_eval]
 
     llm = init_vllm(model_name, 'cuda:1', 0)
     load_policy_into_vllm_instance(model, llm)
@@ -139,7 +142,7 @@ def train_sft(model_name, train_path, n_examples,
 
         if (idx + 1) % eval_steps == 0: 
             load_policy_into_vllm_instance(model, llm)
-            evals = evaluate_vllm(llm, r1_zero_reward_fn, prompts, answers, full_dataset, sampling_params, 'temp.json')
+            evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts, eval_answers, eval_full_dataset, sampling_params, 'temp.json')
 
             correct = 0
             for i in range(len(evals)):
@@ -154,6 +157,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_name', type=str, default='/data/a5-alignment/models/Qwen2.5-Math-1.5B')
     parser.add_argument('--train_path', type=str, default='/data/a5-alignment/MATH/sft.jsonl')
     parser.add_argument('--n_examples', type=int, default=128)
+    parser.add_argument('--n_eval', type=int, default=1024)
     parser.add_argument('--grad_accum_steps', type=int, default=8)
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=64)
@@ -161,5 +165,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    train_sft(args.model_name, args.train_path, args.n_examples, 
+    train_sft(args.model_name, args.train_path, args.n_examples, args.n_eval,
               args.grad_accum_steps, args.learning_rate, args.batch_size, args.eval_steps, False)
