@@ -197,6 +197,7 @@ def train_grpo(model_name,
 
                 wandb.log({
                     "train/train_loss": loss.item(),
+                    "train/policy_log_probs_grad": torch.mean(metadata['policy_log_probs_grad']).item(),
                     "train_step": train_step+1
                 })
 
