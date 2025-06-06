@@ -158,6 +158,7 @@ def train_grpo(model_name,
         advantages, rew_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
+        advantages = torch.stack(advantages)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
