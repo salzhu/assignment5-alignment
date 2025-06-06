@@ -188,6 +188,9 @@ def train_grpo(model_name,
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
                 policy_log_probs = get_response_log_probs(policy, input, labels, False)['log_probs']
+                print(advantages)
+                print(policy_log_probs)
+                advantages.to('cuda')
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
                     advantages, advantages, old_log_probs, cliprange
