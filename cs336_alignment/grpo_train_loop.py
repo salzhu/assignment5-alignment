@@ -196,10 +196,10 @@ def train_grpo(model_name,
 
                 wandb.log({
                     "train/train_loss": loss.item(),
-                    "train_step": epoch * len(dataset) + idx + 1
+                    "train_step": epoch * len(input_ids_tensor) + idx + 1
                 })
 
-                if (epoch * len(dataset) + idx + 1) % gradient_accumulation_steps == 0:
+                if (epoch * len(input_ids_tensor) + idx + 1) % gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
@@ -207,7 +207,7 @@ def train_grpo(model_name,
                     # Zero gradients every `grad_accum_steps` batches.
                     optimizer.zero_grad()
                 
-                if (epoch * len(dataset) + idx + 1) % eval_steps == 0: 
+                if (epoch * len(input_ids_tensor) + idx + 1) % eval_steps == 0: 
                     load_policy_into_vllm_instance(policy, llm)
                     indices = random.sample(range(len(eval_prompts)), n_eval) 
                     eval_prompts_small = [eval_prompts[i] for i in indices]
