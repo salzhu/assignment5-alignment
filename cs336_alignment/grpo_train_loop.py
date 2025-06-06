@@ -187,7 +187,9 @@ def train_grpo(model_name,
                 input = input.to('cuda')
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
-                policy_log_probs = get_response_log_probs(policy, input, labels, False)['log_probs']
+                policy_log_probs = get_response_log_probs(policy, input, labels, True)
+                token_entropy = policy_log_probs['token_entropy']
+                policy_log_probs = policy_log_probs['log_probs']
                 advantage = advantage.to('cuda')
                 advantage = torch.unsqueeze(advantage,-1)
                 loss, metadata = grpo_microbatch_train_step(
@@ -197,7 +199,7 @@ def train_grpo(model_name,
 
                 wandb.log({
                     "train/train_loss": loss.item(),
-                    "train/policy_log_probs_grad": torch.mean(metadata['policy_log_probs_grad']).item(),
+                    "train/token_entropy": torch.mean(token_entropy).item(),
                     "train_step": train_step+1
                 })
 
