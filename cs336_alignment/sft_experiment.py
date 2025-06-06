@@ -9,6 +9,7 @@ from mock import patch
 from transformers import AutoModelForCausalLM, PreTrainedModel, AutoTokenizer
 from torch.utils.data import TensorDataset, DataLoader
 import argparse
+from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
 
 from cs336_alignment.sft_helper import tokenize_prompt_and_output, get_response_log_probs, sft_microbatch_train_step
 from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
@@ -73,8 +74,15 @@ def train_sft(model_name, train_path, n_examples, n_eval,
     with open(train_path, 'r') as file:
         for line in file:
             data = json.loads(line)
-            prompts.append(data['prompt'])
-            outputs.append(data["response"])
+            if filter_correct:
+                rewards = r1_zero_reward_fn(data['response'], data['ground_truth'])
+                if rewards['answer_reward'] == 1:
+                    prompts.append(data['prompt'])
+                    outputs.append(data["response"])
+            else:
+                prompts.append(data['prompt'])
+                outputs.append(data["response"])
+    print(len(prompts))
     tokenized_dict = tokenize_prompt_and_output(prompts, outputs, tokenizer)
 
     input_ids_tensor = torch.tensor(tokenized_dict['input_ids'][:n_examples])
