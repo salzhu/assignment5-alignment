@@ -224,11 +224,11 @@ def train_grpo(model_name,
                             correct += 1
                         rewards += evals[i]['rewards']['reward']
 
-                    log = {'eval/accuracy': correct / len(evals),'eval_step': (idx + 1) // eval_steps}
+                    log = {'eval/accuracy': correct / len(evals),'eval_step': (train_step + 1) // eval_steps}
                     wandb.log(log)
-                    log = {'eval/rewards': rewards,'eval_step': (idx + 1) // eval_steps}
+                    log = {'eval/rewards': rewards,'eval_step': (train_step + 1) // eval_steps}
                     wandb.log(log)
-                    end = (idx + 1) // eval_steps
+                    end = (train_step + 1) // eval_steps
                 
                 train_step += 1
             torch.cuda.empty_cache()
@@ -246,7 +246,7 @@ def train_grpo(model_name,
 
     log = {'eval/accuracy': correct / len(evals),'eval_step': end + 2}
     wandb.log(log)
-    log = {'eval/rewards': rewards,'eval_step': (idx + 1) // eval_steps}
+    log = {'eval/rewards': rewards,'eval_step': (train_step + 1) // eval_steps}
     wandb.log(log)
 
 
