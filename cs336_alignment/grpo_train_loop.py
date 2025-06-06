@@ -192,6 +192,8 @@ def train_grpo(model_name,
                 print(advantages)
                 print(policy_log_probs)
                 advantages.to('cuda')
+                print(policy_log_probs.shape)
+                print(advantages.shape)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
                     advantages, advantages, old_log_probs, cliprange
