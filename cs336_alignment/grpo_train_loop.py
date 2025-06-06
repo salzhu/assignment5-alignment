@@ -154,7 +154,8 @@ def train_grpo(model_name,
                 rollout_responses.append(outputs[i].outputs[j].text)
             repeated_ground_truths += group_size * [train_answers_small[i]]
 
-        advantages = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, group_size, 
+        advantages = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
+                                                      repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, outputs, tokenizer)
