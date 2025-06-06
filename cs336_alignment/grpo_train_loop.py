@@ -189,9 +189,8 @@ def train_grpo(model_name,
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
                 policy_log_probs = get_response_log_probs(policy, input, labels, False)['log_probs']
-                print(advantages)
                 print(policy_log_probs)
-                advantage.to('cuda')
+                advantage = advantage.to('cuda')
                 print(policy_log_probs.shape)
                 print(advantage.shape)
                 advantage = torch.unsqueeze(advantage,-1)
