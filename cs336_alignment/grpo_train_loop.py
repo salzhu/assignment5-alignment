@@ -194,6 +194,7 @@ def train_grpo(model_name,
                 advantage.to('cuda')
                 print(policy_log_probs.shape)
                 print(advantage.shape)
+                advantage = torch.unsqueeze(advantage,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
                     advantage, advantage, old_log_probs, cliprange
