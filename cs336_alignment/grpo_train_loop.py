@@ -150,7 +150,7 @@ def train_grpo(model_name,
         repeated_ground_truths = []
         prompts = []
         for i in range(len(train_prompts)):
-            for j in range(len(outputs[i])):
+            for j in range(len(outputs[i].outputs)):
                 rollout_responses.append(outputs[i].outputs[j].text)
             repeated_ground_truths += group_size * [train_answers_small[i]]
 
