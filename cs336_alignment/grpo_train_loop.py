@@ -168,8 +168,6 @@ def train_grpo(model_name,
 
         old_policy.to('cuda')
         old_policy_log_probs = []
-        print(input_ids_tensor.shape)
-        print(label_ids_tensor.shape)
         for i in range(len(input_ids_tensor)):
             old_policy_log_probs.append(get_response_log_probs(old_policy, 
                                                                torch.unsqueeze(input_ids_tensor[i],0).to('cuda'), 
@@ -189,10 +187,7 @@ def train_grpo(model_name,
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
                 policy_log_probs = get_response_log_probs(policy, input, labels, False)['log_probs']
-                print(policy_log_probs)
                 advantage = advantage.to('cuda')
-                print(policy_log_probs.shape)
-                print(advantage.shape)
                 advantage = torch.unsqueeze(advantage,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
