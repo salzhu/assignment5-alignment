@@ -155,7 +155,7 @@ def train_grpo(model_name,
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
-        advantages = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
+        advantages, rew_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         
