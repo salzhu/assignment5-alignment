@@ -179,24 +179,24 @@ def train_grpo(model_name,
         old_policy_log_probs = torch.stack(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
 
-        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs)
+        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, advantages)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
         
         for _ in range(epochs_per_rollout_batch):
 
-            for idx, (input, labels, mask, old_log_probs) in enumerate(dataloader):
+            for idx, (input, labels, mask, old_log_probs, advantage) in enumerate(dataloader):
                 input = input.to('cuda')
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
                 policy_log_probs = get_response_log_probs(policy, input, labels, False)['log_probs']
                 print(advantages)
                 print(policy_log_probs)
-                advantages.to('cuda')
+                advantage.to('cuda')
                 print(policy_log_probs.shape)
-                print(advantages.shape)
+                print(advantage.shape)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
-                    advantages, advantages, old_log_probs, cliprange
+                    advantage, advantage, old_log_probs, cliprange
                 )
 
                 wandb.log({
