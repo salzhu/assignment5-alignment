@@ -153,12 +153,13 @@ def train_grpo(model_name,
             for j in range(len(outputs[i].outputs)):
                 rollout_responses.append(outputs[i].outputs[j].text)
             repeated_ground_truths += group_size * [train_answers_small[i]]
+            prompts += group_size * [train_prompts_small[i]]
 
         advantages = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         
-        tokenized_dict = tokenize_prompt_and_output(prompts, outputs, tokenizer)
+        tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
         input_ids_tensor = torch.tensor(tokenized_dict['input_ids'])
         label_ids_tensor = torch.tensor(tokenized_dict['labels'])
