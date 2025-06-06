@@ -166,9 +166,13 @@ def train_grpo(model_name,
         mask_tensor = torch.tensor(tokenized_dict['response_mask'])
 
         old_policy.to('cuda')
-        old_policy_log_probs = get_response_log_probs(old_policy, input_ids_tensor.to('cuda'), 
-                                                      label_ids_tensor.to('cuda'), False)['log_probs']
+        old_policy_log_probs = []
+        for i in range(len(input_ids_tensor)):
+            old_policy_log_probs.append(get_response_log_probs(old_policy, input_ids_tensor[i].to('cuda'), 
+                                                      label_ids_tensor[i].to('cuda'), False)['log_probs'].item())
         old_policy.to('cpu')
+        old_policy_log_probs = torch.Tensor(old_policy_log_probs).to('cuda')
+        torch.cuda.empty_cache()
 
         dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
@@ -219,6 +223,7 @@ def train_grpo(model_name,
                     log = {'eval/rewards': rewards,'eval_step': (idx + 1) // eval_steps}
                     wandb.log(log)
                     end = (idx + 1) // eval_steps
+                torch.cuda.empty_cache()
 
     load_policy_into_vllm_instance(policy, llm)
     evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts, eval_answers, eval_full_dataset, 
