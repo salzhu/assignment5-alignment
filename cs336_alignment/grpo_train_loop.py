@@ -222,7 +222,7 @@ def train_grpo(model_name,
                     for i in range(len(evals)):
                         if evals[i]['rewards']['answer_reward'] == 1: 
                             correct += 1
-                        rewards += evals[i]['rewards']
+                        rewards += evals[i]['rewards']['reward']
 
                     log = {'eval/accuracy': correct / len(evals),'eval_step': (idx + 1) // eval_steps}
                     wandb.log(log)
@@ -242,7 +242,7 @@ def train_grpo(model_name,
     for i in range(len(evals)):
         if evals[i]['rewards']['answer_reward'] == 1: 
             correct += 1
-        rewards += evals[i]['rewards']
+        rewards += evals[i]['rewards']['reward']
 
     log = {'eval/accuracy': correct / len(evals),'eval_step': end + 2}
     wandb.log(log)
