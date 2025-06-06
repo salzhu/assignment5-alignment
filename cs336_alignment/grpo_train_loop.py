@@ -167,9 +167,10 @@ def train_grpo(model_name,
 
         old_policy.to('cuda')
         old_policy_log_probs = []
+        print(input_ids_tensor.shape)
+        print(label_ids_tensor.shape)
         for i in range(len(input_ids_tensor)):
-            old_policy_log_probs.append(get_response_log_probs(old_policy, input_ids_tensor[i].to('cuda'), 
-                                                      label_ids_tensor[i].to('cuda'), False)['log_probs'].item())
+            old_policy_log_probs.append(get_response_log_probs(old_policy, input_ids_tensor[i].to('cuda'), label_ids_tensor[i].to('cuda'), False)['log_probs'].item())
         old_policy.to('cpu')
         old_policy_log_probs = torch.Tensor(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
