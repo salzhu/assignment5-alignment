@@ -188,8 +188,9 @@ if __name__ == '__main__':
     parser.add_argument('--learning_rate', type=float, default=0.001)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--eval_steps', type=int, default=8)
+    parser.add_argument('--filter_correct', type=bool, default=False)
 
     args = parser.parse_args()
 
     train_sft(args.model_name, args.train_path, args.n_examples, args.n_eval,
-              args.grad_accum_steps, args.learning_rate, args.batch_size, args.eval_steps, False)
+              args.grad_accum_steps, args.learning_rate, args.batch_size, args.eval_steps, args.filter_correct)
