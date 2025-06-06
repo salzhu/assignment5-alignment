@@ -165,7 +165,10 @@ def train_grpo(model_name,
         label_ids_tensor = torch.tensor(tokenized_dict['labels'])
         mask_tensor = torch.tensor(tokenized_dict['response_mask'])
 
-        old_policy_log_probs = get_response_log_probs(old_policy, input_ids_tensor, label_ids_tensor, False)['log_probs']
+        old_policy.to('cuda')
+        old_policy_log_probs = get_response_log_probs(old_policy, input_ids_tensor.to('cuda'), 
+                                                      label_ids_tensor.to('cuda'), False)['log_probs']
+        old_policy.to('cpu')
 
         dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
