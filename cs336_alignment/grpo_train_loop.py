@@ -169,6 +169,7 @@ def train_grpo(model_name,
 
         print(advantages)
         print(raw_rewards)
+        raw_rewards = torch.tensor(raw_rewards)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
@@ -189,7 +190,7 @@ def train_grpo(model_name,
         torch.cuda.empty_cache()
 
         dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, 
-                                torch.stack(raw_rewards), advantages)
+                                raw_rewards, advantages)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
         
         for epoch in range(epochs_per_rollout_batch):
