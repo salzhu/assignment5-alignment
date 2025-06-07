@@ -85,7 +85,7 @@ def train_grpo(model_name,
         max_tokens=sampling_max_tokens,
         min_tokens=sampling_min_tokens,
         n=group_size,
-        seed=0,
+        # seed=0,
     )
     train_sampling_params.stop = ["</answer>"]
     train_sampling_params.include_stop_str_in_output = True
@@ -94,7 +94,7 @@ def train_grpo(model_name,
         temperature=sampling_temperature, top_p=1.0,
         max_tokens=sampling_max_tokens,
         min_tokens=sampling_min_tokens,
-        seed=0,
+        # seed=0,
     )
     eval_sampling_params.stop = ["</answer>"]
     eval_sampling_params.include_stop_str_in_output = True
@@ -163,6 +163,9 @@ def train_grpo(model_name,
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
+        print(len(prompts))
+        print(len(repeated_ground_truths))
+
         # print(prompts)
         # print(rollout_responses)
 
@@ -201,20 +204,20 @@ def train_grpo(model_name,
         for epoch in range(epochs_per_rollout_batch):
             print(epoch)
 
-            for idx, (input, labels, mask, old_log_probs, raw_rewards, advantage) in enumerate(dataloader):
+            for idx, (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
                 input = input.to('cuda')
-                labels = labels.to('cuda')
+                label = label.to('cuda')
                 mask = mask.to('cuda')
-                policy_log_probs = get_response_log_probs(policy, input, labels, True)
+                policy_log_probs = get_response_log_probs(policy, input, label, True)
                 token_entropy = policy_log_probs['token_entropy']
                 policy_log_probs = policy_log_probs['log_probs']
                 advantage = advantage.to('cuda')
-                print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_probs.shape)
+                print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_prob.shape)
                 advantage = torch.unsqueeze(advantage,-1)
-                raw_rewards = torch.unsqueeze(raw_rewards,-1)
+                raw_reward = torch.unsqueeze(raw_reward,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
-                    raw_rewards, advantage, old_log_probs, cliprange,length_normalize
+                    raw_reward, advantage, old_log_prob, cliprange,length_normalize
                 )
 
                 wandb.log({

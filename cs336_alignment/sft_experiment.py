@@ -30,7 +30,7 @@ def init_vllm(model_id: str, device: str, seed: int, gpu_memory_utilization: flo
     Start the inference process, here we use vLLM to hold a model on
     a GPU separate from the policy.
     """
-    vllm_set_random_seed(seed)
+    # vllm_set_random_seed(seed)
     # Monkeypatch from TRL:
     # https://github.com/huggingface/trl/blob/
     # 22759c820867c8659d00082ba8cf004e963873c1/trl/trainer/grpo_trainer.py
