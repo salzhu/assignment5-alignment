@@ -204,7 +204,16 @@ def train_grpo(model_name,
                     "train_step": train_step+1
                 })
 
+                
+
                 if (train_step+1) % gradient_accumulation_steps == 0:
+                    for p in policy.parameters():
+                        param_norm = p.grad.detach().data.norm(2)
+                        total_norm += param_norm.item() ** 2
+                    total_norm = total_norm ** 0.5
+                    wandb.log({
+                        "train/grad_norm": total_norm
+                    })
                     torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
@@ -277,7 +286,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--gpu_memory_utilization', type=float, default=0.2)
     parser.add_argument('--use_std_normalization', type=int, default=0)
-    parser.add_argument('--len_normalize', type=int, default=0)
+    parser.add_argument('--use_length_normalization', type=int, default=0)
     parser.add_argument('--cliprange', type=float, default=0.2)
 
     parser.add_argument('--eval_steps', type=int, default=256)
