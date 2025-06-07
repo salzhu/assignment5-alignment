@@ -161,12 +161,12 @@ def train_grpo(model_name,
         for i in range(len(train_prompts_small)):
             for j in range(len(outputs[i].outputs)):
                 rollout_responses.append(outputs[i].outputs[j].text)
-            print(outputs[i].outputs)
+            # print(outputs[i].outputs)
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
-        print(len(prompts))
-        print(len(repeated_ground_truths))
+        # print(len(prompts))
+        # print(len(repeated_ground_truths))
 
         # print(prompts)
         # print(rollout_responses)
@@ -174,11 +174,11 @@ def train_grpo(model_name,
         advantages, raw_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
-        print(advantages)
+        # print(advantages)
         advantages = torch.stack(advantages)
 
-        print(advantages)
-        print(raw_rewards)
+        # print(advantages)
+        # print(raw_rewards)
         raw_rewards = torch.tensor(raw_rewards)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
@@ -214,7 +214,7 @@ def train_grpo(model_name,
                 token_entropy = policy_log_probs['token_entropy']
                 policy_log_probs = policy_log_probs['log_probs']
                 advantage = advantage.to('cuda')
-                print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_prob.shape)
+                # print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_prob.shape)
                 advantage = torch.unsqueeze(advantage,-1)
                 raw_reward = torch.unsqueeze(raw_reward,-1)
                 loss, metadata = grpo_microbatch_train_step(
