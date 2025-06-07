@@ -207,6 +207,7 @@ def train_grpo(model_name,
                 
 
                 if (train_step+1) % gradient_accumulation_steps == 0:
+                    total_norm = 0
                     for p in policy.parameters():
                         param_norm = p.grad.detach().data.norm(2)
                         total_norm += param_norm.item() ** 2
