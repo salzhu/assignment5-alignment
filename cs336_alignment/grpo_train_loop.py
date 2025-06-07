@@ -286,7 +286,7 @@ if __name__ == '__main__':
     parser.add_argument('--loss_type', type=str, default='reinforce_with_baseline')
 
     parser.add_argument('--gpu_memory_utilization', type=float, default=0.2)
-    parser.add_argument('--use_std_normalization', type=int, default=0)
+    parser.add_argument('--use_std_normalization', type=int, default=1)
     parser.add_argument('--use_length_normalization', type=int, default=0)
     parser.add_argument('--cliprange', type=float, default=0.2)
 
