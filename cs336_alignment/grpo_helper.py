@@ -145,4 +145,4 @@ def grpo_microbatch_train_step(
     masked_mean_loss.backward()
     metadata['loss_masked'] = masked_mean_loss
     metadata['policy_log_probs_grad'] = policy_log_probs.grad
-    return masked_mean_loss, metadata
+    return 0, 0 #masked_mean_loss, metadata
