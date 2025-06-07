@@ -41,6 +41,7 @@ def train_grpo(model_name,
                 use_std_normalization: bool = True,
                 cliprange = 0.2,
                 eval_steps=256,
+                length_normalize=False,
                 n_eval=1024
             ):
     policy = AutoModelForCausalLM.from_pretrained(model_name,
@@ -107,7 +108,7 @@ def train_grpo(model_name,
     
     wandb.init(
         project="a5-grpo",
-        name=f"grpo_lr{learning_rate}_{loss_type}_std{use_std_normalization}",  # Set your run name here
+        name=f"grpo_lr{learning_rate}_{loss_type}_lennorm{length_normalize}",  # Set your run name here
     )
 
     # Setup wandb metrics
@@ -194,7 +195,7 @@ def train_grpo(model_name,
                 advantage = torch.unsqueeze(advantage,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
-                    advantage, advantage, old_log_probs, cliprange
+                    advantage, advantage, old_log_probs, cliprange,length_normalize
                 )
 
                 wandb.log({
@@ -275,13 +276,22 @@ if __name__ == '__main__':
     parser.add_argument('--loss_type', type=str, default='reinforce_with_baseline')
 
     parser.add_argument('--gpu_memory_utilization', type=float, default=0.2)
-    parser.add_argument('--use_std_normalization', type=bool, default=True)
+    parser.add_argument('--use_std_normalization', type=int, default=0)
+    parser.add_argument('--len_normalize', type=int, default=0)
     parser.add_argument('--cliprange', type=float, default=0.2)
 
     parser.add_argument('--eval_steps', type=int, default=256)
     parser.add_argument('--n_eval', type=int, default=1024)
 
     args = parser.parse_args()
+
+    use_length_normalization = False 
+    if args.use_length_normalization == 1:
+        use_length_normalization = True 
+
+    use_std_normalization = False 
+    if args.use_std_normalization == 1:
+        use_std_normalization = True 
 
     train_grpo(args.model_name, 
                args.n_grpo_steps, 
@@ -297,8 +307,9 @@ if __name__ == '__main__':
                args.gradient_accumulation_steps,
                args.gpu_memory_utilization,
                args.loss_type,
-               args.use_std_normalization,
+               use_std_normalization,
                args.cliprange,
                args.eval_steps,
+               use_length_normalization,
                n_eval=1024
             )

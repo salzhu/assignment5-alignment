@@ -1,6 +1,7 @@
 import torch 
 import numpy as np 
 from typing import Literal
+from cs336_alignment.sft_helper import masked_normalize
 
 """
 7.2 GRPO compute_group_normalized_rewards
@@ -125,9 +126,19 @@ def grpo_microbatch_train_step(
         advantages: torch.Tensor | None = None,
         old_log_probs: torch.Tensor | None = None,
         cliprange: float | None = None,
+        length_normalize=False,
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
     loss, metadata = compute_policy_gradient_loss(policy_log_probs, loss_type, raw_rewards, advantages, 
                                         old_log_probs, cliprange)
+    if length_normalize:
+        max_gen_len = response_mask.shape[-1]
+        masked_normalize_loss = masked_normalize(
+            loss, response_mask, normalize_constant=max_gen_len) / gradient_accumulation_steps
+        masked_normalize_loss.backward()
+        metadata['loss_len_normalized'] = masked_normalize_loss
+        metadata['policy_log_probs_grad'] = policy_log_probs.grad
+        return masked_normalize_loss, metadata
+        
     masked_mean_loss = masked_mean(loss, response_mask) / gradient_accumulation_steps
     masked_mean_loss.backward()
     metadata['loss_masked'] = masked_mean_loss
