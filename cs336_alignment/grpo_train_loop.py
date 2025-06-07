@@ -186,13 +186,13 @@ def train_grpo(model_name,
         old_policy_log_probs = torch.stack(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
 
-        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, advantages)
+        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, raw_rewards, advantages)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
         
         for epoch in range(epochs_per_rollout_batch):
             print(epoch)
 
-            for idx, (input, labels, mask, old_log_probs, advantage) in enumerate(dataloader):
+            for idx, (input, labels, mask, old_log_probs, raw_rewards, advantage) in enumerate(dataloader):
                 input = input.to('cuda')
                 labels = labels.to('cuda')
                 mask = mask.to('cuda')
@@ -200,10 +200,11 @@ def train_grpo(model_name,
                 token_entropy = policy_log_probs['token_entropy']
                 policy_log_probs = policy_log_probs['log_probs']
                 advantage = advantage.to('cuda')
-                advantage = torch.unsqueeze(advantage,-1)
+                print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_probs.shape)
+                # advantage = torch.unsqueeze(advantage,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
-                    advantage, advantage, old_log_probs, cliprange,length_normalize
+                    raw_rewards, advantage, old_log_probs, cliprange,length_normalize
                 )
 
                 wandb.log({
