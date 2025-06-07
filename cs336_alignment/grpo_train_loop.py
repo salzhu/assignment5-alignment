@@ -186,7 +186,8 @@ def train_grpo(model_name,
         old_policy_log_probs = torch.stack(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
 
-        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, raw_rewards, advantages)
+        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, 
+                                torch.stack(raw_rewards), advantages)
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
         
         for epoch in range(epochs_per_rollout_batch):
