@@ -144,6 +144,7 @@ def train_grpo(model_name,
     for _ in range(n_grpo_steps):
         
         # sample questions
+        print(n_prompts_per_rollout_batch)
         train_indices = random.sample(range(len(train_prompts)), n_prompts_per_rollout_batch) 
         old_policy = copy.deepcopy(policy)
         load_policy_into_vllm_instance(old_policy, old_llm)
@@ -160,6 +161,7 @@ def train_grpo(model_name,
         for i in range(len(train_prompts_small)):
             for j in range(len(outputs[i].outputs)):
                 rollout_responses.append(outputs[i].outputs[j].text)
+            print(outputs[i].outputs)
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
