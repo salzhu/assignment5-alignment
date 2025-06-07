@@ -168,7 +168,7 @@ def train_grpo(model_name,
         advantages = torch.stack(advantages)
 
         print(advantages)
-        print(rewards)
+        print(raw_rewards)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
