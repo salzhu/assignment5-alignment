@@ -146,7 +146,8 @@ def train_grpo(model_name,
         train_prompts_small = [train_prompts[i] for i in train_indices]
         train_answers_small = [train_answers[i] for i in train_indices]
 
-        outputs = old_llm.generate(train_prompts_small, train_sampling_params)
+        with torch.inference_mode():
+            outputs = old_llm.generate(train_prompts_small, train_sampling_params)
 
         rollout_responses = []
         repeated_ground_truths = []
@@ -157,7 +158,10 @@ def train_grpo(model_name,
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
-        advantages, rew_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
+        print(prompts)
+        print(rollout_responses)
+
+        advantages, raw_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         advantages = torch.stack(advantages)
@@ -206,17 +210,15 @@ def train_grpo(model_name,
                     "train_step": train_step+1
                 })
 
-                
-
                 if (train_step+1) % gradient_accumulation_steps == 0:
-                    total_norm = 0
-                    for p in policy.parameters():
-                        param_norm = p.grad.detach().data.norm(2)
-                        total_norm += param_norm.item() ** 2
-                    total_norm = total_norm ** 0.5
-                    wandb.log({
-                        "train/grad_norm": total_norm
-                    })
+                    # total_norm = 0
+                    # for p in policy.parameters():
+                    #     param_norm = p.grad.detach().data.norm(2)
+                    #     total_norm += param_norm.item() ** 2
+                    # total_norm = total_norm ** 0.5
+                    # wandb.log({
+                    #     "train/grad_norm": total_norm
+                    # })
                     torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
