@@ -76,7 +76,7 @@ def train_grpo(model_name,
             eval_full_dataset.append(data)
 
     llm = init_vllm(model_name, 'cuda', 0, gpu_memory_utilization=gpu_memory_utilization)
-    old_llm = init_vllm(model_name, 'cuda', 0)
+    old_llm = init_vllm(model_name, 'cuda', 0, gpu_memory_utilization=gpu_memory_utilization)
     load_policy_into_vllm_instance(policy, llm)
     load_policy_into_vllm_instance(policy, old_llm)
 
@@ -158,13 +158,15 @@ def train_grpo(model_name,
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
 
-        print(prompts)
-        print(rollout_responses)
+        # print(prompts)
+        # print(rollout_responses)
 
         advantages, raw_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         advantages = torch.stack(advantages)
+
+        print(advantages)
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
