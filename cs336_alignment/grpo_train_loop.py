@@ -99,6 +99,11 @@ def train_grpo(model_name,
     eval_sampling_params.stop = ["</answer>"]
     eval_sampling_params.include_stop_str_in_output = True
 
+    indices = random.sample(range(len(eval_prompts)), n_eval) 
+    eval_prompts_small = [eval_prompts[i] for i in indices]
+    eval_answers_small = [eval_answers[i] for i in indices]
+    eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
+
     optimizer = torch.optim.AdamW(
                     policy.parameters(),
                     lr=learning_rate,
@@ -205,7 +210,8 @@ def train_grpo(model_name,
                 policy_log_probs = policy_log_probs['log_probs']
                 advantage = advantage.to('cuda')
                 print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_probs.shape)
-                # advantage = torch.unsqueeze(advantage,-1)
+                advantage = torch.unsqueeze(advantage,-1)
+                raw_rewards = torch.unsqueeze(raw_rewards,-1)
                 loss, metadata = grpo_microbatch_train_step(
                     policy_log_probs, mask, gradient_accumulation_steps, loss_type, 
                     raw_rewards, advantage, old_log_probs, cliprange,length_normalize
@@ -235,10 +241,7 @@ def train_grpo(model_name,
                 
                 if (train_step + 1) % eval_steps == 0: 
                     load_policy_into_vllm_instance(policy, llm)
-                    indices = random.sample(range(len(eval_prompts)), n_eval) 
-                    eval_prompts_small = [eval_prompts[i] for i in indices]
-                    eval_answers_small = [eval_answers[i] for i in indices]
-                    eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
+                    
                     evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
                                           eval_full_dataset_small, 
                                           eval_sampling_params, 'temp.json')
@@ -254,6 +257,7 @@ def train_grpo(model_name,
                     log = {'eval/rewards': rewards,'eval_step': (train_step + 1) // eval_steps}
                     wandb.log(log)
                     end = (train_step + 1) // eval_steps
+                    print(correct / len(evals), train_step)
                 
                 train_step += 1
             torch.cuda.empty_cache()

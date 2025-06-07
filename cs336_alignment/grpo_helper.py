@@ -128,8 +128,8 @@ def grpo_microbatch_train_step(
         cliprange: float | None = None,
         length_normalize=False,
         ) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
-    print(advantages)
-    print(advantages.shape, raw_rewards.shape, policy_log_probs.shape, response_mask.shape, old_log_probs.shape)
+    # print(advantages)
+    # print(advantages.shape, raw_rewards.shape, policy_log_probs.shape, response_mask.shape, old_log_probs.shape)
     loss, metadata = compute_policy_gradient_loss(policy_log_probs, loss_type, raw_rewards, advantages, 
                                         old_log_probs, cliprange)
     if length_normalize:
@@ -145,4 +145,4 @@ def grpo_microbatch_train_step(
     masked_mean_loss.backward()
     metadata['loss_masked'] = masked_mean_loss
     metadata['policy_log_probs_grad'] = policy_log_probs.grad
-    return 0, 0 #masked_mean_loss, metadata
+    return masked_mean_loss, metadata
