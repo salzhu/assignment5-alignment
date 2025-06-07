@@ -184,6 +184,7 @@ def train_grpo(model_name,
         dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
         
         for epoch in range(epochs_per_rollout_batch):
+            print(epoch)
 
             for idx, (input, labels, mask, old_log_probs, advantage) in enumerate(dataloader):
                 input = input.to('cuda')
