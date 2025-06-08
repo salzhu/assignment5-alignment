@@ -17,11 +17,11 @@ from cs336_alignment.sft_helper import tokenize_prompt_and_output, get_response_
 from cs336_alignment.grpo_helper import compute_group_normalized_rewards, grpo_microbatch_train_step
 from cs336_alignment.math_baseline import evaluate_vllm
 
-prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/question_only.prompt'
+prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
 val_path = '/data/a5-alignment/MATH/validation.jsonl'
 train_path = '/data/a5-alignment/MATH/train.jsonl'
 replacement = "{question}"
-reward_fn = question_only_reward_fn
+reward_fn = r1_zero_reward_fn
 
 def train_grpo(model_name, 
                n_grpo_steps: int = 200,
