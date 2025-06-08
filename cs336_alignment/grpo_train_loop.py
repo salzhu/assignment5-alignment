@@ -116,7 +116,7 @@ def train_grpo(model_name,
     
     wandb.init(
         project="a5-grpo",
-        name=f"grpo_lr{learning_rate}_{loss_type}_epochs{epochs_per_rollout_batch}_bs{train_batch_size}",  # Set your run name here
+        name=f"lr{learning_rate}_{loss_type}_epochs{epochs_per_rollout_batch}_bs{train_batch_size}_len{length_normalize}_std{use_std_normalization}",  # Set your run name here
     )
     # epochs{epochs_per_rollout_batch}_bs{train_batch_size}
     # len{length_normalize}_std{use_std_normalization}
