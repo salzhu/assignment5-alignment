@@ -262,6 +262,7 @@ def train_grpo(model_name,
                     # total_norm = total_norm ** 0.5
                     
                     total_norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
+                    torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
                     wandb.log({
                         "train/grad_norm": total_norm
                     })
