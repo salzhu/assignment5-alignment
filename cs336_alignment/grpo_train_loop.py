@@ -105,11 +105,6 @@ def train_grpo(model_name,
     eval_sampling_params.stop = ["</answer>"]
     eval_sampling_params.include_stop_str_in_output = True
 
-    indices = random.sample(range(len(eval_prompts)), n_eval) 
-    eval_prompts_small = [eval_prompts[i] for i in indices]
-    eval_answers_small = [eval_answers[i] for i in indices]
-    eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
-
     optimizer = torch.optim.AdamW(
                     policy.parameters(),
                     lr=learning_rate,
@@ -276,6 +271,11 @@ def train_grpo(model_name,
                     with torch.no_grad():
                         
                         load_policy_into_vllm_instance(policy, llm)
+
+                        indices = random.sample(range(len(eval_prompts)), n_eval) 
+                        eval_prompts_small = [eval_prompts[i] for i in indices]
+                        eval_answers_small = [eval_answers[i] for i in indices]
+                        eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
                         
                         evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
                                             eval_full_dataset_small, 
