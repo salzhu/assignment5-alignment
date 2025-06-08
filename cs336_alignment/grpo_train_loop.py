@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import argparse
 import random 
 import copy
+import numpy as np 
 from typing import Literal
 from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
 
@@ -246,6 +247,7 @@ def train_grpo(model_name,
                 wandb.log({
                     "train/train_loss": loss.item(),
                     "train/token_entropy": torch.mean(token_entropy).item(),
+                    "train/token_entropy": torch.mean(token_entropy).item(),
                     "train_step": train_step
                 })
 
@@ -282,15 +284,28 @@ def train_grpo(model_name,
                                             eval_sampling_params, 'temp.json')
                         correct = 0
                         rewards = 0
+
+                        response_lengths = []
+                        response_lengths_correct = []
+                        response_lengths_incorrect = []
                         for i in range(len(evals)):
                             if evals[i]['rewards']['answer_reward'] == 1: 
                                 correct += 1
                             rewards += evals[i]['rewards']['reward']
 
-                    log = {'eval/accuracy': correct / len(evals),'eval_step': train_step}
-                    wandb.log(log)
-                    log = {'eval/rewards': rewards,'eval_step': train_step}
-                    wandb.log(log)
+                            length = len(tokenizer(evals[i]['response'])['input_ids']) 
+                            response_lengths.append(length) 
+
+                            if evals[i]['rewards']['answer_reward'] == 1: 
+                                response_lengths_correct.append(length)
+                            else:
+                                response_lengths_incorrect.append(length)
+
+                    wandb.log({'eval/accuracy': correct / len(evals),'eval_step': train_step})
+                    wandb.log({'eval/rewards': rewards,'eval_step': train_step})
+                    wandb.log({'eval/response_length': np.mean(response_lengths),'eval_step': train_step})
+                    wandb.log({'eval/response_lengths_correct': np.mean(response_lengths_correct),'eval_step': train_step})
+                    wandb.log({'eval/response_lengths_incorrect': np.mean(response_lengths_incorrect),'eval_step': train_step})
                     end = train_step
                     print(correct / len(evals), train_step, flush=True)
                 
