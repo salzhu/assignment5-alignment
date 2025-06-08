@@ -76,9 +76,9 @@ def train_grpo(model_name,
             eval_full_dataset.append(data)
 
     llm = init_vllm(model_name, 'cuda', 0, gpu_memory_utilization=gpu_memory_utilization)
-    old_llm = init_vllm(model_name, 'cuda', 0, gpu_memory_utilization=gpu_memory_utilization)
+    # old_llm = init_vllm(model_name, 'cuda', 0, gpu_memory_utilization=gpu_memory_utilization)
     load_policy_into_vllm_instance(policy, llm)
-    load_policy_into_vllm_instance(policy, old_llm)
+    # load_policy_into_vllm_instance(policy, old_llm)
 
     train_sampling_params = SamplingParams(
         temperature=sampling_temperature, top_p=1.0,
@@ -146,14 +146,15 @@ def train_grpo(model_name,
         # sample questions
         print(n_prompts_per_rollout_batch)
         train_indices = random.sample(range(len(train_prompts)), n_prompts_per_rollout_batch) 
-        old_policy = copy.deepcopy(policy)
-        load_policy_into_vllm_instance(old_policy, old_llm)
+        # old_policy = copy.deepcopy(policy)
+        # load_policy_into_vllm_instance(old_policy, old_llm)
+        load_policy_into_vllm_instance(policy, llm)
         # get dataset 
         train_prompts_small = [train_prompts[i] for i in train_indices]
         train_answers_small = [train_answers[i] for i in train_indices]
 
         with torch.inference_mode():
-            outputs = old_llm.generate(train_prompts_small, train_sampling_params)
+            outputs = llm.generate(train_prompts_small, train_sampling_params) # old_llm
 
         rollout_responses = []
         repeated_ground_truths = []
@@ -187,15 +188,15 @@ def train_grpo(model_name,
         label_ids_tensor = torch.tensor(tokenized_dict['labels'])
         mask_tensor = torch.tensor(tokenized_dict['response_mask'])
 
-        with torch.inference_mode():
-            old_policy.to('cuda')
+        with torch.no_grad():
+            # old_policy.to('cuda')
             old_policy_log_probs = []
             for i in range(len(input_ids_tensor)):
-                old_policy_log_probs.append(get_response_log_probs(old_policy, 
+                old_policy_log_probs.append(get_response_log_probs(policy,  # old_policy
                                                                 torch.unsqueeze(input_ids_tensor[i],0).to('cuda'), 
                                                                 torch.unsqueeze(label_ids_tensor[i],0).to('cuda'), 
                                                                 False)['log_probs'].detach())
-            old_policy.to('cpu')
+            # old_policy.to('cpu')
         old_policy_log_probs = torch.stack(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
 
@@ -228,7 +229,7 @@ def train_grpo(model_name,
                     "train_step": train_step+1
                 })
 
-                if (train_step+1) % gradient_accumulation_steps == 0:
+                if (idx+1) % gradient_accumulation_steps == 0:
                     # total_norm = 0
                     # for p in policy.parameters():
                     #     param_norm = p.grad.detach().data.norm(2)
@@ -244,7 +245,7 @@ def train_grpo(model_name,
                     # Zero gradients every `grad_accum_steps` batches.
                     optimizer.zero_grad()
                 
-                if (train_step + 1) % eval_steps == 0: 
+                if (idx + 1) % eval_steps == 0: #train_steps 
                     load_policy_into_vllm_instance(policy, llm)
                     
                     evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
