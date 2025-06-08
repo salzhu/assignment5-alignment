@@ -257,10 +257,11 @@ def train_grpo(model_name,
                     #     param_norm = p.grad.detach().data.norm(2)
                     #     total_norm += param_norm.item() ** 2
                     # total_norm = total_norm ** 0.5
-                    # wandb.log({
-                    #     "train/grad_norm": total_norm
-                    # })
-                    torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
+                    
+                    total_norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
+                    wandb.log({
+                        "train/grad_norm": total_norm
+                    })
                     print('step',flush=True)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
