@@ -213,10 +213,10 @@ def train_grpo(model_name,
         policy.train()
         
         for epoch in range(epochs_per_rollout_batch):
-            print(epoch, flush=True)
+            # print(epoch, flush=True)
 
             for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
-                print(idx, flush=True, end=' ')
+                # print(idx, flush=True, end=' ')
                 # policy.train()
                 # micro_train_batch_size
             # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
@@ -262,7 +262,7 @@ def train_grpo(model_name,
                     wandb.log({
                         "train/grad_norm": total_norm
                     })
-                    print('step',flush=True)
+                    # print('step',flush=True)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
 
