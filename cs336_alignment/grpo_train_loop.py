@@ -38,7 +38,7 @@ def train_grpo(model_name,
                loss_type: Literal[
                    "no_baseline",
                    "reinforce_with_baseline",
-                   "grpo_clip",] = "reinforce_with_baseline",
+                   "grpo_clip","grpo_noclip"] = "reinforce_with_baseline",
                 use_std_normalization: bool = True,
                 cliprange = 0.2,
                 eval_steps=256,
