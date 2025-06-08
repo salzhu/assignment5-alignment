@@ -220,7 +220,7 @@ def train_grpo(model_name,
             print(epoch, flush=True)
 
             for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
-                print(idx, flush=True)
+                print(idx, flush=True, end=' ')
                 # policy.train()
                 # micro_train_batch_size
             # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
