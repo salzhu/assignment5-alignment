@@ -251,7 +251,7 @@ def train_grpo(model_name,
                 wandb.log({
                     "train/train_loss": loss.item(),
                     "train/token_entropy": torch.mean(token_entropy).item(),
-                    "train_step": train_step+1
+                    "train_step": idx
                 })
 
                 if idx % gradient_accumulation_steps == 0:
@@ -287,11 +287,11 @@ def train_grpo(model_name,
                                 correct += 1
                             rewards += evals[i]['rewards']['reward']
 
-                    log = {'eval/accuracy': correct / len(evals),'eval_step': (train_step + 1) // eval_steps}
+                    log = {'eval/accuracy': correct / len(evals),'eval_step': idx}
                     wandb.log(log)
-                    log = {'eval/rewards': rewards,'eval_step': (train_step + 1) // eval_steps}
+                    log = {'eval/rewards': rewards,'eval_step': idx}
                     wandb.log(log)
-                    end = (train_step + 1) // eval_steps
+                    end = idx
                     print(correct / len(evals), train_step)
                 
                 train_step += 1
