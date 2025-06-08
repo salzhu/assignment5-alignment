@@ -159,6 +159,8 @@ def train_grpo(model_name,
         train_prompts_small = [train_prompts[i] for i in train_indices]
         train_answers_small = [train_answers[i] for i in train_indices]
 
+        policy.eval()
+
         with torch.inference_mode():
             outputs = llm.generate(train_prompts_small, train_sampling_params) # old_llm
 
@@ -171,6 +173,7 @@ def train_grpo(model_name,
             # print(outputs[i].outputs)
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
+        print(len(outputs), len(rollout_responses), len(repeated_ground_truths), len(prompts))
 
         # print(len(prompts))
         # print(len(repeated_ground_truths))
@@ -194,6 +197,7 @@ def train_grpo(model_name,
         label_ids_tensor = torch.tensor(tokenized_dict['labels']).to('cuda')
         mask_tensor = torch.tensor(tokenized_dict['response_mask']).to('cuda')
 
+        policy.eval()
         with torch.no_grad():
             # old_policy.to('cuda')
             old_policy_log_probs = []
@@ -216,6 +220,8 @@ def train_grpo(model_name,
             print(epoch)
 
             for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
+                print(idx)
+                policy.train()
                 # micro_train_batch_size
             # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
                 # input = input.to('cuda')
@@ -266,7 +272,9 @@ def train_grpo(model_name,
                     optimizer.zero_grad()
                 
                 if idx % eval_steps == 0: #train_steps 
+                    policy.eval()
                     with torch.no_grad():
+                        
                         load_policy_into_vllm_instance(policy, llm)
                         
                         evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
