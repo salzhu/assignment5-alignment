@@ -150,7 +150,7 @@ def train_grpo(model_name,
     for _ in range(n_grpo_steps):
         
         # sample questions
-        print(n_prompts_per_rollout_batch)
+        print(n_prompts_per_rollout_batch, flush=True)
         train_indices = random.sample(range(len(train_prompts)), n_prompts_per_rollout_batch) 
         # old_policy = copy.deepcopy(policy)
         # load_policy_into_vllm_instance(old_policy, old_llm)
@@ -173,7 +173,7 @@ def train_grpo(model_name,
             # print(outputs[i].outputs)
             repeated_ground_truths += group_size * [train_answers_small[i]]
             prompts += group_size * [train_prompts_small[i]]
-        print(len(outputs), len(rollout_responses), len(repeated_ground_truths), len(prompts))
+        print(len(outputs), len(rollout_responses), len(repeated_ground_truths), len(prompts), flush=True)
 
         # print(len(prompts))
         # print(len(repeated_ground_truths))
@@ -217,10 +217,10 @@ def train_grpo(model_name,
         policy.train()
         
         for epoch in range(epochs_per_rollout_batch):
-            print(epoch)
+            print(epoch, flush=True)
 
             for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
-                print(idx)
+                print(idx, flush=True)
                 policy.train()
                 # micro_train_batch_size
             # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
@@ -292,7 +292,7 @@ def train_grpo(model_name,
                     log = {'eval/rewards': rewards,'eval_step': idx}
                     wandb.log(log)
                     end = idx
-                    print(correct / len(evals), train_step)
+                    print(correct / len(evals), train_step, flush=True)
                 
                 train_step += 1
             torch.cuda.empty_cache()
