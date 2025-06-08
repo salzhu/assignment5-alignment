@@ -81,19 +81,25 @@ def train_grpo(model_name,
     # load_policy_into_vllm_instance(policy, old_llm)
 
     train_sampling_params = SamplingParams(
-        temperature=sampling_temperature, top_p=1.0,
+        temperature=sampling_temperature, 
+        # top_p=1.0,
         max_tokens=sampling_max_tokens,
         min_tokens=sampling_min_tokens,
         n=group_size,
+        stop = ["</answer>"],
+        include_stop_str_in_output = True
         # seed=0,
     )
     train_sampling_params.stop = ["</answer>"]
     train_sampling_params.include_stop_str_in_output = True
 
     eval_sampling_params = SamplingParams(
-        temperature=sampling_temperature, top_p=1.0,
+        temperature=1.0, 
+        top_p=1.0,
         max_tokens=sampling_max_tokens,
         min_tokens=sampling_min_tokens,
+        stop = ["</answer>"],
+        include_stop_str_in_output = True
         # seed=0,
     )
     eval_sampling_params.stop = ["</answer>"]
@@ -176,17 +182,17 @@ def train_grpo(model_name,
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         # print(advantages)
-        advantages = torch.stack(advantages)
+        advantages = torch.stack(advantages).to('cuda')
 
         # print(advantages)
         # print(raw_rewards)
-        raw_rewards = torch.tensor(raw_rewards)
+        raw_rewards = torch.tensor(raw_rewards).to('cuda')
         
         tokenized_dict = tokenize_prompt_and_output(prompts, rollout_responses, tokenizer)
 
-        input_ids_tensor = torch.tensor(tokenized_dict['input_ids'])
-        label_ids_tensor = torch.tensor(tokenized_dict['labels'])
-        mask_tensor = torch.tensor(tokenized_dict['response_mask'])
+        input_ids_tensor = torch.tensor(tokenized_dict['input_ids']).to('cuda')
+        label_ids_tensor = torch.tensor(tokenized_dict['labels']).to('cuda')
+        mask_tensor = torch.tensor(tokenized_dict['response_mask']).to('cuda')
 
         with torch.no_grad():
             # old_policy.to('cuda')
@@ -195,26 +201,39 @@ def train_grpo(model_name,
                 old_policy_log_probs.append(get_response_log_probs(policy,  # old_policy
                                                                 torch.unsqueeze(input_ids_tensor[i],0).to('cuda'), 
                                                                 torch.unsqueeze(label_ids_tensor[i],0).to('cuda'), 
-                                                                False)['log_probs'].detach())
+                                                                False)['log_probs'])
             # old_policy.to('cpu')
         old_policy_log_probs = torch.stack(old_policy_log_probs).to('cuda')
         torch.cuda.empty_cache()
 
-        dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, 
-                                raw_rewards, advantages)
-        dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
+        # dataset = TensorDataset(input_ids_tensor, label_ids_tensor, mask_tensor, old_policy_log_probs, 
+        #                         raw_rewards, advantages)
+        # dataloader = DataLoader(dataset, batch_size=micro_train_batch_size, shuffle=True)
+
+        policy.train()
         
         for epoch in range(epochs_per_rollout_batch):
             print(epoch)
 
-            for idx, (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
-                input = input.to('cuda')
-                label = label.to('cuda')
-                mask = mask.to('cuda')
+            for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
+                # micro_train_batch_size
+            # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
+                # input = input.to('cuda')
+                # label = label.to('cuda')
+                # mask = mask.to('cuda')
+                input = input_ids_tensor[idx : idx + micro_train_batch_size]
+                label = label_ids_tensor[idx : idx + micro_train_batch_size]
+                mask = mask_tensor[idx : idx + micro_train_batch_size]
+                advantage = advantages[idx : idx + micro_train_batch_size]
+                raw_reward = raw_rewards[idx : idx + micro_train_batch_size]
+                old_log_prob = old_policy_log_probs[idx : idx + micro_train_batch_size]
+
+
                 policy_log_probs = get_response_log_probs(policy, input, label, True)
                 token_entropy = policy_log_probs['token_entropy']
                 policy_log_probs = policy_log_probs['log_probs']
-                advantage = advantage.to('cuda')
+
+                # advantage = advantage.to('cuda')
                 # print(policy_log_probs.shape, mask.shape, advantage.shape, old_log_prob.shape)
                 advantage = torch.unsqueeze(advantage,-1)
                 raw_reward = torch.unsqueeze(raw_reward,-1)
@@ -229,7 +248,7 @@ def train_grpo(model_name,
                     "train_step": train_step+1
                 })
 
-                if (idx+1) % gradient_accumulation_steps == 0:
+                if idx % gradient_accumulation_steps == 0:
                     # total_norm = 0
                     # for p in policy.parameters():
                     #     param_norm = p.grad.detach().data.norm(2)
@@ -239,24 +258,26 @@ def train_grpo(model_name,
                     #     "train/grad_norm": total_norm
                     # })
                     torch.nn.utils.clip_grad_norm_(policy.parameters(), 1.0)
+                    print('step',flush=True)
                     # Update weights every `grad_accum_steps` batches.
                     optimizer.step()
 
                     # Zero gradients every `grad_accum_steps` batches.
                     optimizer.zero_grad()
                 
-                if (idx + 1) % eval_steps == 0: #train_steps 
-                    load_policy_into_vllm_instance(policy, llm)
-                    
-                    evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
-                                          eval_full_dataset_small, 
-                                          eval_sampling_params, 'temp.json')
-                    correct = 0
-                    rewards = 0
-                    for i in range(len(evals)):
-                        if evals[i]['rewards']['answer_reward'] == 1: 
-                            correct += 1
-                        rewards += evals[i]['rewards']['reward']
+                if idx % eval_steps == 0: #train_steps 
+                    with torch.no_grad():
+                        load_policy_into_vllm_instance(policy, llm)
+                        
+                        evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
+                                            eval_full_dataset_small, 
+                                            eval_sampling_params, 'temp.json')
+                        correct = 0
+                        rewards = 0
+                        for i in range(len(evals)):
+                            if evals[i]['rewards']['answer_reward'] == 1: 
+                                correct += 1
+                            rewards += evals[i]['rewards']['reward']
 
                     log = {'eval/accuracy': correct / len(evals),'eval_step': (train_step + 1) // eval_steps}
                     wandb.log(log)
