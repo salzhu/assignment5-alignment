@@ -291,7 +291,7 @@ def train_grpo(model_name,
                     wandb.log(log)
                     log = {'eval/rewards': rewards,'eval_step': train_step}
                     wandb.log(log)
-                    end = idx
+                    end = train_step
                     print(correct / len(evals), train_step, flush=True)
                 
                 train_step += micro_train_batch_size
@@ -308,9 +308,9 @@ def train_grpo(model_name,
             correct += 1
         rewards += evals[i]['rewards']['reward']
 
-    log = {'eval/accuracy': correct / len(evals),'eval_step': end + 2}
+    log = {'eval/accuracy': correct / len(evals),'eval_step': end + micro_train_batch_size}
     wandb.log(log)
-    log = {'eval/rewards': rewards,'eval_step': (train_step + 1) // eval_steps}
+    log = {'eval/rewards': rewards,'eval_step': end + micro_train_batch_size}
     wandb.log(log)
 
 
