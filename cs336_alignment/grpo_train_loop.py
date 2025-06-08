@@ -10,17 +10,18 @@ import random
 import copy
 import numpy as np 
 from typing import Literal
-from cs336_alignment.drgrpo_grader import r1_zero_reward_fn
+from cs336_alignment.drgrpo_grader import r1_zero_reward_fn, question_only_reward_fn
 
 from cs336_alignment.sft_experiment import init_vllm, load_policy_into_vllm_instance
 from cs336_alignment.sft_helper import tokenize_prompt_and_output, get_response_log_probs
 from cs336_alignment.grpo_helper import compute_group_normalized_rewards, grpo_microbatch_train_step
 from cs336_alignment.math_baseline import evaluate_vllm
 
-prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/r1_zero.prompt'
+prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/question_only.prompt'
 val_path = '/data/a5-alignment/MATH/validation.jsonl'
 train_path = '/data/a5-alignment/MATH/train.jsonl'
 replacement = "{question}"
+reward_fn = question_only_reward_fn
 
 def train_grpo(model_name, 
                n_grpo_steps: int = 200,
@@ -179,7 +180,7 @@ def train_grpo(model_name,
         # print(prompts)
         # print(rollout_responses)
 
-        advantages, raw_rewards, _ = compute_group_normalized_rewards(r1_zero_reward_fn, rollout_responses, 
+        advantages, raw_rewards, _ = compute_group_normalized_rewards(reward_fn, rollout_responses, 
                                                       repeated_ground_truths, group_size, 
                                                       advantage_eps, use_std_normalization)
         # print(advantages)
@@ -282,7 +283,7 @@ def train_grpo(model_name,
                         eval_answers_small = [eval_answers[i] for i in indices]
                         eval_full_dataset_small = [eval_full_dataset[i] for i in indices]
                         
-                        evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts_small, eval_answers_small, 
+                        evals = evaluate_vllm(llm, reward_fn, eval_prompts_small, eval_answers_small, 
                                             eval_full_dataset_small, 
                                             eval_sampling_params, 'temp.json')
                         correct = 0
@@ -316,7 +317,7 @@ def train_grpo(model_name,
             torch.cuda.empty_cache()
 
     load_policy_into_vllm_instance(policy, llm)
-    evals = evaluate_vllm(llm, r1_zero_reward_fn, eval_prompts, eval_answers, eval_full_dataset, 
+    evals = evaluate_vllm(llm, reward_fn, eval_prompts, eval_answers, eval_full_dataset, 
                             eval_sampling_params, 'temp.json')
 
     correct = 0
