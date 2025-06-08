@@ -221,7 +221,7 @@ def train_grpo(model_name,
 
             for idx in range(0, len(input_ids_tensor), micro_train_batch_size):
                 print(idx, flush=True)
-                policy.train()
+                # policy.train()
                 # micro_train_batch_size
             # , (input, label, mask, old_log_prob, raw_reward, advantage) in enumerate(dataloader):
                 # input = input.to('cuda')
@@ -251,10 +251,10 @@ def train_grpo(model_name,
                 wandb.log({
                     "train/train_loss": loss.item(),
                     "train/token_entropy": torch.mean(token_entropy).item(),
-                    "train_step": idx
+                    "train_step": train_step
                 })
 
-                if idx % gradient_accumulation_steps == 0:
+                if train_step % gradient_accumulation_steps == 0:
                     # total_norm = 0
                     # for p in policy.parameters():
                     #     param_norm = p.grad.detach().data.norm(2)
@@ -271,8 +271,8 @@ def train_grpo(model_name,
                     # Zero gradients every `grad_accum_steps` batches.
                     optimizer.zero_grad()
                 
-                if idx % eval_steps == 0: #train_steps 
-                    policy.eval()
+                if train_step % eval_steps == 0: #train_steps 
+                    # policy.eval()
                     with torch.no_grad():
                         
                         load_policy_into_vllm_instance(policy, llm)
@@ -287,14 +287,14 @@ def train_grpo(model_name,
                                 correct += 1
                             rewards += evals[i]['rewards']['reward']
 
-                    log = {'eval/accuracy': correct / len(evals),'eval_step': idx}
+                    log = {'eval/accuracy': correct / len(evals),'eval_step': train_step}
                     wandb.log(log)
-                    log = {'eval/rewards': rewards,'eval_step': idx}
+                    log = {'eval/rewards': rewards,'eval_step': train_step}
                     wandb.log(log)
                     end = idx
                     print(correct / len(evals), train_step, flush=True)
                 
-                train_step += 1
+                train_step += micro_train_batch_size
             torch.cuda.empty_cache()
 
     load_policy_into_vllm_instance(policy, llm)
