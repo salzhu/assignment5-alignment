@@ -307,7 +307,7 @@ def train_grpo(model_name,
                     wandb.log({'eval/response_lengths_correct': np.mean(response_lengths_correct),'eval_step': train_step})
                     wandb.log({'eval/response_lengths_incorrect': np.mean(response_lengths_incorrect),'eval_step': train_step})
                     end = train_step
-                    print(correct / len(evals), train_step, flush=True)
+                    print(correct / len(evals), np.mean(response_lengths), train_step, flush=True)
                 
                 train_step += micro_train_batch_size
             torch.cuda.empty_cache()
