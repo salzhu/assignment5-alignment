@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import argparse
 import random 
 import copy
+import os 
 import numpy as np 
 from typing import Literal
 from cs336_alignment.drgrpo_grader import r1_zero_reward_fn, question_only_reward_fn
@@ -118,6 +119,11 @@ def train_grpo(model_name,
         project="a5-grpo",
         name=f"lr{learning_rate}_{loss_type}_epochs{epochs_per_rollout_batch}_bs{train_batch_size}_len{length_normalize}_std{use_std_normalization}",  # Set your run name here
     )
+
+    save_path = f'/data/c-salzhu/lr{learning_rate}_{loss_type}_epochs{epochs_per_rollout_batch}_bs{train_batch_size}_len{length_normalize}_std{use_std_normalization}"'
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
     # epochs{epochs_per_rollout_batch}_bs{train_batch_size}
     # len{length_normalize}_std{use_std_normalization}
 
@@ -145,6 +151,9 @@ def train_grpo(model_name,
 
     n_microbatches_per_rollout_batch = rollout_batch_size // micro_train_batch_size
     train_step = 0
+
+    best_eval = -100
+    best_eval_full = -100
 
     for _ in range(n_grpo_steps):
         
@@ -273,7 +282,41 @@ def train_grpo(model_name,
                     # Zero gradients every `grad_accum_steps` batches.
                     optimizer.zero_grad()
                 
-                if train_step % eval_steps == 0: #train_steps 
+                if train_step % (10 * eval_steps) == 0: #train_steps 
+                    # policy.eval()
+                    with torch.no_grad():
+                        
+                        load_policy_into_vllm_instance(policy, llm)
+                        
+                        evals = evaluate_vllm(llm, reward_fn, eval_prompts, eval_answers, 
+                                            eval_full_dataset, 
+                                            eval_sampling_params, 'temp.json')
+                        correct = 0
+                        rewards = 0
+
+                        response_lengths = []
+                        response_lengths_correct = []
+                        response_lengths_incorrect = []
+                        for i in range(len(evals)):
+                            if evals[i]['rewards']['answer_reward'] == 1: 
+                                correct += 1
+                            rewards += evals[i]['rewards']['reward']
+
+                            length = len(tokenizer(evals[i]['response'])['input_ids']) 
+                            response_lengths.append(length) 
+
+                            if evals[i]['rewards']['answer_reward'] == 1: 
+                                response_lengths_correct.append(length)
+                            else:
+                                response_lengths_incorrect.append(length)
+                        wandb.log({'eval/accuracy_full': correct / len(evals),'eval_step_full': train_step})
+
+                    if correct / len(evals) >= best_eval_full: 
+                        best_eval_full = correct / len(evals)
+                        policy.save_pretrained(f'{save_path}_full')
+                        print('saved', flush=True)
+                
+                elif train_step % eval_steps == 0: #train_steps 
                     # policy.eval()
                     with torch.no_grad():
                         
@@ -305,6 +348,12 @@ def train_grpo(model_name,
                                 response_lengths_correct.append(length)
                             else:
                                 response_lengths_incorrect.append(length)
+
+                    
+                    if correct / len(evals) >= best_eval: 
+                        best_eval = correct / len(evals)
+                        policy.save_pretrained(f'{save_path}_partial')
+                        print('saved', flush=True)
 
                     wandb.log({'eval/accuracy': correct / len(evals),'eval_step': train_step})
                     wandb.log({'eval/rewards': rewards,'eval_step': train_step})
