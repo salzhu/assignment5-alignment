@@ -18,7 +18,7 @@ from cs336_alignment.sft_helper import tokenize_prompt_and_output, get_response_
 from cs336_alignment.grpo_helper import compute_group_normalized_rewards, grpo_microbatch_train_step
 from cs336_alignment.math_baseline import evaluate_vllm
 
-prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/question_only.prompt'
+prompt_path = '/home/c-salzhu/assignment5-alignment/cs336_alignment/prompts/question_only.prompt'
 val_path = '/data/a5-alignment/MATH/validation.jsonl'
 train_path = '/data/a5-alignment/MATH/train.jsonl'
 replacement = "{question}"
